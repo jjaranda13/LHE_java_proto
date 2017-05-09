@@ -137,6 +137,9 @@ public float[] compressBasicFrame(String optionratio)
 	if (optionratio.equals("2"))
 	lhe.quantizeOneHopPerPixelBin(img.hops[0],img.LHE_YUV[0]);
 	
+	
+	
+	
 	//lhe.quantizeOneHopPerPixel_prueba(img.hops[0],img.LHE_YUV[0]);
 	//PRblock.img=img;
 	//grid.computeMetrics();//compute metrics of all Prblocks, equalize & quantize
@@ -175,7 +178,18 @@ public float[] compressBasicFrame(String optionratio)
 		}
 	int lenbin=huff.getLenTranslateCodes(be.down_stats_saco[0]);
 	
+	
 	System.out.println("total_hops: "+be.totalhops);
+	
+	System.out.println("image_bits iniciales: "+lenbin+"   bpp iniciales:"+((float)lenbin/(img.width*img.height)));
+	
+	System.out.println("");
+	System.out.println("Results after DYNAMIC RLC:");
+	System.out.println("==========================");
+	System.out.println("  dynamic RLC parameters->  TAMANO_RLC="+lhe.TAMANO_RLC+"  TAMANO_condicion="+lhe.TAMANO_condicion);
+	///Dynamic RLC savings
+	int net_savings=lhe.postRLC(img.hops[0],img.LHE_YUV[0],0,img.width-1,0,img.height-1);
+	lenbin=lenbin-net_savings;	
 	System.out.println("image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
 	
 	result[1]=(float)lenbin/(img.width*img.height);
@@ -203,6 +217,7 @@ public float[] compressLHE2()
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento35(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento36(img.hops[0],img.LHE_YUV[0]);
 	lhe.quantizeOneHopPerPixel_LHE2_experimento38(img.hops[0],img.LHE_YUV[0]);
+	//lhe.quantizeOneHopPerPixel_LHE2_experimento39(img.hops[0],img.LHE_YUV[0]);
 	//lhe.esperanza_matematica_v001(img.hops[0],img.LHE_YUV[0]);// bueno
 	
 	
@@ -368,7 +383,8 @@ public float[] compressFrame(float ql)
 		//for (int ku=0;ku<img.width*img.height;ku++)img.hops[0][ku]=100;//<---los inicializo a 100 para que de error si algo va mal
 		//for ( int y=0 ; y<img.grid.number_of_blocks_V;y++)
 		
-		
+		//RLC savings 
+		int net_savings=0;
 		
 		for ( int y=0 ; y<grid.number_of_blocks_V;y++)
 		{
@@ -412,6 +428,7 @@ public float[] compressFrame(float ql)
 				//2nd LHE
 				//boolean LHE=true;
 				if (LHE==true)
+				{
 					//el R es el bueno. R de ratio
 			    
 					//lhe.quantizeDownsampledBlock_R(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
@@ -422,7 +439,7 @@ public float[] compressFrame(float ql)
 				//lhe.quantizeDownsampledBlock_R4_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				
 				//lhe.quantizeDownsampledBlock_R2(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
-				
+				net_savings+=lhe.postRLC(img.hops[0],img.downsampled_LHE_YUV[0],bi.xini,bi.downsampled_xfin, bi.yini,bi.downsampled_yfin);
 				
 				//esta es sin boundaries:
 				    //lhe.quantizeDownsampledBlock_SinBoundaries(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
@@ -433,7 +450,7 @@ public float[] compressFrame(float ql)
 				
 				
 					//lhe.quantizeDownsampledBlock_R(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.YUV[0],img.boundaries_YUV[0] );
-				
+				}
 				else
 				 img.downsampled_LHE_YUV[0]=img.downsampled_YUV[0];
 			    
@@ -507,6 +524,9 @@ public float[] compressFrame(float ql)
 		System.out.println("No nulos:"+nonulos+"   segunbinenc:"+be.totalhops);
 		System.out.println("image_bits="+total_bits+ "   bpp:"+((float)total_bits/(img.width*img.height))+ "   perhop:"+(float)total_bits/nonulos);
 		
+		
+		
+		
 		result[0]+=100*(float)nonulos/(img.width*img.height);
 		//result[1]+=((float)total_bits/(img.width*img.height));
 		
@@ -517,6 +537,12 @@ public float[] compressFrame(float ql)
 		result[1]+=((float)(total_bits+bits_grid)/(img.width*img.height));
 		//result[1]+=((float)bits_grid/(img.width*img.height));
 		System.out.println("total_bits="+(total_bits+bits_grid)+ "   bpp:"+result[1]);//+ "   perhop:"+(float)total_bits/nonulos);
+		
+		System.out.println("");
+		System.out.println("RLC mejora:");
+		System.out.println("===========");
+		System.out.println("RLC net savings:"+net_savings+ " ---> final bpp="+((float)(total_bits+bits_grid-net_savings)/(img.width*img.height)));
+		System.out.println("");
 		
 		//be.compressHopsHuffman();
 		

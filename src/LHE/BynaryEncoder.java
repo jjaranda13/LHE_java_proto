@@ -1553,7 +1553,11 @@ public StringBuffer processSymblock5(StringBuffer sb,float PRx,float PRy)
 				pos=y*width+x;//hop position
 				//System.out.println("x:"+x+"  y:"+y);
 				int hop=hops[pos];
-			
+			    
+				
+				
+			    
+			    
 				//System.out.println(hop+","+pos);
 				stathops[hop]++;//statistics of hops
 				
