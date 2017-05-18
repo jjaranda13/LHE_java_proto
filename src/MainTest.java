@@ -29,6 +29,13 @@ public class MainTest {
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	public static void main(String [ ] args)
 	{
+		
+	//int kk=128;	
+	//int[][][][][] cosa=new int [kk][kk][kk][kk][kk];	
+		
+	//cosa[0][0][0][0]=1;
+	
+			
 	System.out.println("Menu:");
 	System.out.println ("0) compress an image using Basic-LHE (bit-rate non elegible)");
 	System.out.println ("1) compress an image [default if you press ENTER]");
@@ -44,6 +51,7 @@ public class MainTest {
 	System.out.println ("6) compute PSNR for a given image origin and degraded image");
 	System.out.println ("7) interpolate seams");
 	System.out.println ("8) compress LHE2");
+	System.out.println ("9) compress SIMPLE LHE");
 	
 	String option =  readKeyboard();
 	System.out.println ("your option is : "+option);
@@ -59,16 +67,52 @@ public class MainTest {
 	else if (option.equals("6")) m.computePSNR();
 	//else if (option.equals("3")) m.performance();
 	else if (option.equals("7")) m.interpolateSeams();
-	else if (option.equals("8")) m.compressImageLHE2();;
+	else if (option.equals("8")) m.compressImageLHE2();
+	else if (option.equals("9")) m.compressImageSIMPLELHE();
 	
 	}
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void compressImageSIMPLELHE()
+			{
+				System.out.println("you have enter into LHE3");
+				System.out.println ("Enter filename [default=./img/lena.bmp]:");
+				
+				String filename =  readKeyboard();
+				if (filename.equals("")) filename=new String("./img/lena.bmp");
+				
+				
+				System.out.println ("your filename is : "+filename);
+				
+				FrameCompressor fc=new LHE.FrameCompressor(1);
+				fc.DEBUG=true;
+				fc.loadFrame(filename);
+				
+				
+				System.out.println(" width:"+fc.img.width);
+				System.out.println(" height:"+fc.img.height);
+				fc.compressSIMPLELHE();//option,filename);
+				
+				
+				//float ssim=MySSIM.getSSIM("./output_debug/orig_YUV_BN.bmp", "./output_img/BasicLHE_YUV.bmp");
+				//System.out.println ("SSIM:"+ssim);
+				
+				
+				
+			}
+			
+		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		public void compressImageLHE2()
 		{
-			System.out.println("you have enter into Basic-LHE");
+			System.out.println("you have enter into LHE2");
 			System.out.println ("Enter filename [default=./img/lena.bmp]:");
+			//System.out.println ("Enter filename [default=./img/LHE2_test002.bmp]:");
 			String filename =  readKeyboard();
 			if (filename.equals("")) filename=new String("./img/lena.bmp");
+			//if (filename.equals("")) filename=new String("./img/LHE2_test002.bmp");
+			
 			System.out.println ("your filename is : "+filename);
 			
 			FrameCompressor fc=new LHE.FrameCompressor(1);
@@ -95,10 +139,11 @@ public class MainTest {
 			//fc.compressBasicFrame(option,filename);
 			fc.compressLHE2();//option,filename);
 			
+			
 			float ssim=MySSIM.getSSIM("./output_debug/orig_YUV_BN.bmp", "./output_img/BasicLHE_YUV.bmp");
 			System.out.println ("SSIM:"+ssim);
 			
-			System.out.println ("OJO QUE LOS BPP NO ESTAN BIEN CALCULADOS EN LHE2. LO QUE ESTA BIEN SON LOS SAMPLES TOTALES");
+			//System.out.println ("OJO QUE LOS BPP NO ESTAN BIEN CALCULADOS EN LHE2. LO QUE ESTA BIEN SON LOS SAMPLES TOTALES");
 			
 		}
 		
@@ -112,7 +157,7 @@ public class MainTest {
 		System.out.println ("your filename is : "+filename);
 		
 		FrameCompressor fc=new LHE.FrameCompressor(1);
-		fc.DEBUG=true;
+		fc.DEBUG=true; //en modo BASIC el debug se pone a true siempre, asi vemos los hops en un fichero
 		fc.loadFrame(filename);
 		//solo para pruebas
 		//------------------

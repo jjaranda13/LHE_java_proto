@@ -130,6 +130,8 @@ public float[] compressBasicFrame(String optionratio)
 	//lhe.quantizeOneHopPerPixel_initial(img.hops[0],img.LHE_YUV[0]);
 	
 	lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
+	//lhe.quantizeOneHopPerPixel_improved02(img.hops[0],img.LHE_YUV[0]);
+	
 	//lhe.quantizeOneHopPerPixel_R_LHE2(img.hops[0],img.LHE_YUV[0]);
 	
 	//esta no tiene el colin
@@ -197,6 +199,38 @@ public float[] compressBasicFrame(String optionratio)
 	return result;
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public float[] compressSIMPLELHE()
+{
+float[] result=new float[2];//PSNR and bitrate
+	
+	img.YUVtoBMP("./output_debug/orig_YUV_BN.bmp",img.YUV[0]);
+	System.out.println(" quantizing into hops...");
+	System.out.println(" result image is ./output_img/SIMPLE_LHE_YUV.bmp");
+	lhe.quantize_SIMPLELHE_001(img.hops[0],img.LHE_YUV[0]);
+	//ready to save the result in BMP format
+	img.YUVtoBMP("./output_img/SIMPLE_LHE_YUV.bmp",img.LHE_YUV[0]);
+	
+	//PSNR
+	double psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHE_YUV.bmp");
+	System.out.println(" PSNR LHE3:"+psnr);
+	result[0]=(float)psnr;
+	
+	//bitrate
+	BynaryEncoder be=new BynaryEncoder(img.width,img.height);
+	
+	int lenbin=be.hopsToBits_simple(img.hops[0], 0, 0, img.width-1, img.height-1);
+	int ahorroRLC=lhe.postRLC(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	System.out.println("lenbin:"+lenbin+"   rlc savings:"+ahorroRLC);
+	lenbin=lenbin-ahorroRLC;
+	result[1]=lenbin;
+	System.out.println("SIMPLE LHE image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
+	
+	return result;
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 public float[] compressLHE2()
 {
 	float[] result=new float[2];//PSNR and bitrate

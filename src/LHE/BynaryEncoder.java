@@ -2466,7 +2466,55 @@ public void saveSymbolsToTxt(String path_file)
 		d.close();
 	}catch(Exception e){System.out.println("ERROR writing hops in txt format:"+e);}	
 
-
+	
 }
-//**************************************
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+public int hopsToBits_simple(int[] hops, int xini, int yini, int xfin, int yfin)
+{
+	
+	
+	int bits_counter=0;//bits taken by the symbols of this block
+	int pos=yini*width+xini;//initial position of the block
+	
+	int[] blockstats=new int[10];
+	
+	bits_len[0]=8;//000000000    
+	bits_len[1]=7;//0000001
+	bits_len[2]=5;//00001
+	bits_len[3]=3;//001
+	bits_len[4]=1;//1
+	bits_len[5]=2;//01
+	bits_len[6]=4;//0001
+	bits_len[7]=6;//000001
+	bits_len[8]=8;//00000001
+	
+	
+	//bucle for scan hops
+	//----------------------
+	for (int y=yini; y<=yfin;y++)
+	{
+		for (int x=xini; x<=xfin; x++)
+		{
+			totalhops++;
+			
+			
+			pos=y*width+x;//hop position
+			int hop=hops[pos];
+			if (hop<0) continue;//para hops descartados por downsampling
+			
+		    stathops[hop]++;//statistics of hops
+			blockstats[hop]++;
+			
+			bits_counter+=bits_len[hop];
+			
+		}//x
+		//pos+=width;
+	}//y
+	
+	return bits_counter;//this block takes bits_counter bits
+	
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 }
