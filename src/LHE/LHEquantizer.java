@@ -4408,8 +4408,149 @@ public void quantizeOneHopPerPixel_prueba(int[] hops,int[] result_YUV)
 	
 	
 }//end function
-//*******************************************************************************
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 public void quantizeOneHopPerPixelBin(int[] hops,int[] result_YUV)
+{
+	
+	
+	int max_hop1=16;//6; //hop1 interval 4..10
+	int min_hop1=4;//4;// minimum value of hop1 is 4 
+	int start_hop1=(max_hop1+min_hop1)/2;
+	
+	
+	int hop1=start_hop1;
+	int hop0=0; // predicted luminance signal
+	int emin;//error of predicted signal
+	int hop_number=4;//pre-selected hop // 4 is NULL HOP
+	int oc=0;// original color
+	int pix=0;//pixel possition, from 0 to image size        
+	boolean last_small_hop=false;// indicates if last hop is small. used for h1 adaptation mechanism
+	//int rmax=25;
+	
+	
+	for (int y=0;y<img.height;y++)  {
+		for (int x=0;x<img.width;x++)  {
+
+			//original image luminances are in the array img.YUV[0]
+			// chrominance signals are stored in img.YUV[1] and img.YUV[2] but they are not
+			// used in this function, designed for learning LHE basics
+			oc=img.YUV[0][pix];
+
+			//prediction of signal (hop0) , based on pixel's coordinates 
+			//----------------------------------------------------------
+			if ((y>0) &&(x>0) && x!=img.width-1){
+				hop0=(4*result_YUV[pix-1]+3*result_YUV[pix+1-img.width])/7;	
+			}
+			else if ((x==0) && (y>0)){
+				hop0=result_YUV[pix-img.width];
+				last_small_hop=false;
+				hop1=start_hop1;
+			}
+			else if ((x==img.width-1) && (y>0)) {
+				hop0=(4*result_YUV[pix-1]+2*result_YUV[pix-img.width])/6;				
+			}else if (y==0 && x>0) {
+				hop0=result_YUV[x-1];
+			}else if (x==0 && y==0) {  
+				hop0=oc;//first pixel always is perfectly predicted! :-)  
+			}			
+
+			//hops computation. 
+			//error initial values 
+			emin=256;//current minimum prediction error 
+			int e2=0;//computed error for each hop 
+			
+			//positive hops computation
+			//-------------------------
+			int h=0;
+			int hfinal=h;
+			hop_number=4;
+			
+			if (oc-hop0>hop1/2) // esta division es una rotacion binaria
+			{
+				
+				if (hop0+hop1>255) {h=255-hop0;} else h=hop1;
+				hop_number=5;
+				emin=oc-(hop0+h);if (emin<0) emin=-emin;
+				for (int j=6;j<=8;j++) {
+					int salto=h*2; if (hop0+salto>255) {salto=255-hop0;
+					//;System.out.println("hola caracola!!!");System.exit(0);
+					}
+					//if (hop0+salto>255) break;
+					e2=oc-(hop0+salto);//pccr[hop1][hop0][rmax][j];
+					if (e2<0) e2=-e2;
+					if (e2>=emin) break;
+					
+					//if (e2<4) break; //new
+					
+					emin=e2;
+					hop_number=j;
+					h=salto;
+				}
+				
+				hfinal=h;
+				
+			}
+			//negative hops computation
+			//-------------------------
+			else if (hop0-oc>hop1/2) 
+			{
+				
+				
+				if (hop0-hop1<0) h=hop0; else h=hop1;
+				hop_number=3;
+				emin=hop0-h-oc;if (emin<0) emin=-emin;
+
+				for (int j=2;j>=0;j--) {
+					int salto= h*2;if (hop0-salto<0) salto=hop0;
+					//if (hop0-salto<0) break;
+					e2=hop0-salto-oc;//pccr[hop1][hop0][rmax][j];
+					if (e2<0) e2=-e2;
+					if (e2>=emin) break;
+					
+					//if (e2<4) break; //new
+					
+					emin=e2;
+					hop_number=j;
+					h=salto;	
+				}
+				
+				hfinal=-h;
+			
+			}
+
+			//assignment of final color value
+			//--------------------------------
+			result_YUV[pix]=hop0+hfinal;
+					
+			hops[pix]=hop_number; //final hop value
+
+			//tunning hop1 for the next hop ( "h1 adaptation")
+			//------------------------------------------------
+			boolean small_hop=false;
+			if (hop_number<=5 && hop_number>=3) small_hop=true;// 4 is in the center, 4 is null hop
+			else small_hop=false;     
+
+			if( (small_hop) && (last_small_hop))  {
+				hop1=hop1-1;
+				if (hop1<min_hop1) hop1=min_hop1;
+			} 
+			else {
+				hop1=max_hop1;
+			}
+			
+			//lets go for the next pixel
+			//--------------------------
+			last_small_hop=small_hop;
+			pix++;            
+		}//for x
+	}//for y
+	
+}
+//*******************************************************************************
+
+
+//*******************************************************************************
+public void quantizeOneHopPerPixelBin_old(int[] hops,int[] result_YUV)
 {
 	
 	
@@ -9115,11 +9256,10 @@ public void quantizeOneHopPerPixel_LHE2_experimento39(int[] hops,int[] result_YU
 	postresta_LHE2_v001(hops,result_YUV);
 }//end function
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-public int postRLC(int[] hops,int[] result_YUV, int xini, int xfin, int yini, int yfin)
+public int postRLC_v01(int[] hops,int[] result_YUV, int xini, int xfin, int yini, int yfin)
 {
-
+System.out.println (" entrada en postRLC:");
 	int counterh0=0;
 	int counterh0_prev=0;
 	int mode=0; //0=nhuffman, 1=rlc
@@ -9173,11 +9313,94 @@ public int postRLC(int[] hops,int[] result_YUV, int xini, int xfin, int yini, in
 				counterh0=0;
 				ahorro+=(int)(Math.pow(2, TAMANO_RLC)-1);
 				gasto+=TAMANO_RLC;
+				//gasto+=1;
 				
 			}
 			if (mode_prev==1 && mode==0)
 			{
+				//gasto+=TAMANO_RLC+1;
 				gasto+=TAMANO_RLC;
+				ahorro+=counterh0_prev+1;//un bit extra porque sabemos que el siguiente sym no es h0
+				
+			}
+			
+		}//end y
+		//fin de scanline debe implicar volver a mode huffman. ya se tiene en
+		//cuenta esto en el bucle..
+		
+	}
+	
+	int neto=ahorro-gasto;
+	//System.out.println("ahorro:"+ ahorro+"   gasto"+gasto);
+	//System.out.println("NETO:"+ neto);
+	return neto;
+
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public int postRLC_v02(int[] hops,int[] result_YUV, int xini, int xfin, int yini, int yfin)
+{
+System.out.println (" entrada en postRLC:");
+	int counterh0=0;
+	int counterh0_prev=0;
+	int mode=0; //0=nhuffman, 1=rlc
+	int mode_prev=mode;
+	int ahorro=0;
+	int gasto=0;
+	
+	TAMANO_RLC=4;//numero de bits del codigo RLC
+	TAMANO_condicion=8;//TAMANO_RLC; num hops nulos como condicion de cambio a modo RLC.
+	
+	//System.out.println("  dynamic RLC:  TAMANO_RLC="+TAMANO_RLC+"  TAMANO_condicion="+TAMANO_condicion);
+	//for (int y=0;y<img.height;y++)  {
+		//for (int x=0;x<img.width;x++)  {
+			
+	for (int y=yini;y<yfin;y++)  {
+		for (int x=xini;x<xfin;x++)  {
+					
+	
+			//if (result_YUV[y*img.width+x]==0) continue; //esto es para lhe avanzado
+			
+			int hop=hops[y*img.width+x];
+			if (hop<0) continue;// esto es para hops que vamos a downsamplear y desaparecen
+			
+			mode_prev=mode;
+			counterh0_prev=counterh0;
+			
+			
+			//if (x==0 )
+			//{
+				//fin de scanline debe implicar volver a mode huffman
+			//	mode=0;
+			//	counterh0=0;
+			//}
+			
+			//else
+				if (hop==4 ) 
+				{
+				counterh0=counterh0+1;
+			    if (mode==0 && counterh0==TAMANO_condicion) {mode=1;counterh0=0;}
+				}
+			
+			else 
+			{
+				mode=0;
+				counterh0=0;
+			}
+			
+			
+			if (mode==1 && counterh0==(int)Math.pow(2, TAMANO_RLC)-1) 
+			{
+				counterh0=0;
+				ahorro+=(int)(Math.pow(2, TAMANO_RLC)-1);
+				//gasto+=TAMANO_RLC;
+				gasto+=1;
+				
+			}
+			if (mode_prev==1 && mode==0)
+			{
+				gasto+=TAMANO_RLC+1;
+				//gasto+=TAMANO_RLC;
 				ahorro+=counterh0_prev+1;//un bit extra porque sabemos que el siguiente sym no es h0
 				
 			}
@@ -9777,5 +10000,437 @@ for (int y=0;y<img.height;y++)  {
 	}
 }
 }//end function
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+public void quantize_LHE2_experimento_40(int[] hops,int[] result_YUV)
+{
+
+System.out.println("quantizying LHE3...");
+
+int max_hop1=10;//10;//8;//8;//16;//8;// hop1 interval 4..8
+int min_hop1=6;//4;//4;// 
+
+
+int start_hop1=(max_hop1+min_hop1)/2;
+int rmax=25;//40;
+rmax=27;//27;
+
+
+int hop1=start_hop1;//max_hop1;
+int hop0=0; // predicted signal
+int emin;//error of predicted signal
+int hop_number=4;//selected hop // 4 is NULL HOP
+int oc=0;// original color
+int pix=0;//pixel possition, from 0 to image size        
+boolean last_small_hop=false;// indicates if last hop is small
+
+
+
+float error_center=0;
+float error_avg=0;
+
+
+int  prediccion=0;//0=izq, 1 = up
+
+
+int num_segments=32;
+
+float[] pppxi=new float[num_segments];//1.0f;
+for (int i=0; i<num_segments;i++)pppxi[i]=2.0f;//valores iniciales
+float pppx=pppxi[0];//current pppx
+float pppx_prev=pppx;
+
+
+
+int segment_size=img.width/num_segments;
+
+int segment_index=0;
+
+int color=0;
+int colorcount=0;
+
+int sign=0; //0 pos 1 neg
+int signprev=0;
+float[] pr=new float[num_segments];
+int[] counterpix=new int[num_segments];//1.0f;
+
+int pppy=1;
+
+//inicializo todo como si no fuese a ser tenido en cuenta. en realidad es algo 
+//que hago sobre la marcha pero por alguna causa no se hace bien
+for (int y=0;y<img.height;y++)  {
+	
+for (int x=0;x<img.width;x++)  {
+	hops[y*img.width+x]=-1;
+}
+}
+
+
+for (int y=0;y<img.height;)  {
+	//for (int x=0;x<img.width;x++)  {
+	segment_index=0;
+	pix=y*img.width;//+(int)(pppx/2f);
+	for (int x=0;x<img.width;)  {
+		
+		if (segment_index==num_segments) break;
+		 pppx=pppxi[segment_index];
+		 x=(pix%img.width);
+		 
+		 //if (x==0)x=x+(int)(pppx/2);
+		if (pix>img.width*img.height-1) break;
+		
+		//oc=img.YUV[0][pix];
+		
+	    oc=(img.YUV[0][pix]+color)/(colorcount+1);
+	    oc=img.YUV[0][pix];
+	    color=0;
+	    colorcount=0;
+	    if (oc>255) oc=255;
+	    if (oc<0) oc=0;
+	    
+		
+		//prediction of signal (hop0) , based on pixel's coordinates 
+		//----------------------------------------------------------
+		if ((y>0) &&(x>0) && x!=img.width-1){
+			//hop0=(4*result_YUV[pix-1]+3*result_YUV[pix+1-img.width])/7;
+			
+			//prediccion simple
+		    //hop0=(result_YUV[pix-1]+result_YUV[pix+(int)1-img.width])/2;
+			
+			int ur=0;
+			 ur= pix+(int)pppx-pppy*img.width;
+			//else ur= pix+(int)pppx-img.width;
+			//System.out.println("pix-1 :"+(pix-1)+"  "+ur+"   pppx:"+pppx+" y:"+y+" pix:"+pix);
+			
+			hop0=(result_YUV[pix-1]+result_YUV[ur])/2;
+			
+			//hop0=(result_YUV[pix-(int)(pppx_prev/2)]+result_YUV[pix+(int)pppx-img.width])/2;
+			
+		    //hop0=result_YUV[pix-1];
+		   // if (hop_number!=4) if (prediccion==0 )prediccion=1; else prediccion=0;
+		   // if (prediccion==0) hop0=result_YUV[pix-1];
+		   // else if (y>0) hop0=result_YUV[pix-img.width];
+		    
+			
+		}
+		else if ((x==0) && (y>0)){
+			hop0=result_YUV[pix-pppy*img.width];
+			last_small_hop=false;
+			hop1=start_hop1;
+		}
+		else if ((x==img.width-1) && (y>0)) {
+			hop0=(4*result_YUV[pix-1]+2*result_YUV[pix-pppy*img.width])/6;				
+		}else if (y==0 && x>0) {
+			hop0=result_YUV[x-1];
+		}else if (x==0 && y==0) {  
+			hop0=oc;//first pixel always is perfectly predicted! :-)  
+		}			
+
+		
+		
+		
+		
+
+		//hops computation. initial values for errors
+		emin=256;//current minimum prediction error 
+		int e2=0;//computed error for each hop 
+
+		boolean compute_hop=true;
+		int maxh=6;
+		int minh=2;
+		
+		//CON ESTA LINEA QUITAMOS HOPS. LUEGO EN LA FUNCION POSTHOPS LOS PASAMOS A VALOR -1 PARA QUE NO SE CUENTEN
+		//se puede concebir como un cierto downsampling
+		//se podria mejor hacer una PR unidimensional con las fluctuaciones y decidir un sampleado basado en una traducion pr a ppp
+		//if (y%2==1 && hops[pix-img.width]<=maxh && hops[pix-img.width]>=minh) {compute_hop=false;hop_number=4;}
+		
+		
+		
+		//if (y>0 && y%2==0 && hops[pix-img.width]<=maxh && hops[pix-img.width]>=minh) {compute_hop=false;hop_number=4;}
+		//if (x%2==1 && hops[pix-1]<=maxh && hops[pix-1]>=minh) {compute_hop=false;hop_number=4;}
+		//if (y>0 && hops[pix-img.width]<=maxh && hops[pix-img.width]>=minh) {compute_hop=false;hop_number=4;}
+		
+		if (compute_hop)
+		{
+				
+		if (oc-hop0>=0) 
+		{
+			for (int j=4;j<=8;j++) {
+				e2=oc-pccr[hop1][hop0][rmax][j];
+				if (e2<0) e2=-e2;
+				if (e2<emin) {hop_number=j;emin=e2;
+				              //if (e2<min_hop1) break;
+								if (e2<4) break;
+				              }
+				else break;
+			}
+		}
+		//negative hops computation
+		//-------------------------
+		else 
+		{
+			for (int j=4;j>=0;j--) {
+				//System.out.println(hop0);
+				e2=pccr[hop1][hop0][rmax][j]-oc;
+				if (e2<0) e2=-e2;
+				if (e2<emin) {hop_number=j;emin=e2;
+				            //if (e2<min_hop1) break;
+							if (e2<4) break;
+				            }
+				else break;
+			}
+		}
+		}//endif computehop
+		
+		
+		//assignment of final color value
+		//--------------------------------
+		
+		result_YUV[pix]=pccr[hop1][hop0][rmax][hop_number];
+		hops[pix]=hop_number; 
+      
+		//if (compute_hop==false && y%2==1) result_YUV[pix]=result_YUV[pix-img.width];
+      //if (compute_hop==false && x%2==1) result_YUV[pix]=result_YUV[pix-1];
+		
+		
+		//calculo de errores medios
+		//---------------------------
+		error_center+=(oc-result_YUV[pix]);
+		error_avg+=Math.abs((oc-result_YUV[pix]));
+		
+		//tunning hop1 for the next hop
+		//-------------------------------
+		boolean small_hop=false;
+		if (hop_number<=5 && hop_number>=3) small_hop=true;// 4 is in the center, 4 is null hop
+		else small_hop=false;     
+
+		if( (small_hop) && (last_small_hop))  {
+			hop1=hop1-1;
+			if (hop1<min_hop1) hop1=min_hop1;
+		} 
+		else {
+			hop1=max_hop1;
+		}
+		
+		
+		
+		
+		//lets go for the next pixel
+		//--------------------------
+		
+		//ahora rellenamos los pixels en funcion del ppp
+		/*
+		x=pix%img.width;
+		int segment_size=img.width/32;
+		segment_index=x/segment_size;
+		if (segment_index==32) {segment_index=0;}
+		//if (x<125) pppxi[segment_index]=1;
+		//else  pppxi[segment_index]=4;
+		
+        pppxi[segment_index]=segment_index;;
+	    if (pppxi[segment_index]<1) pppxi[segment_index]=1;
+		if (pppxi[segment_index]>8) pppxi[segment_index]=8;//maxpppx;
+		*/
+		
+		//pppx=pppxi[segment_index];
+		
+		
+		
+		
+		
+		//rellenamos los pixels futuros para poder tomar la muestra
+		
+		for (int i=pix+1;i<pix+(int)(pppx+0.5f);i++)
+			//for (int i=pix+1;i<512-x;i++)
+		{
+			color=0;
+			colorcount=0;
+			if (i>img.width && i<(img.width*img.height)) 
+				{
+				if (hops[i]!=-1) continue;
+				//result_YUV[i]=(result_YUV[i-img.height]+4*result_YUV[i-1])/5;
+				result_YUV[i]=result_YUV[i-1];
+				color+=img.YUV[0][i];
+				colorcount+=1;
+				
+				hops[i]=-1;
+				}
+			
+		}		
+		//interpolamos bien
+		if (pix-(int)pppx_prev>=0)
+		{
+		float alfa =(result_YUV[pix]-result_YUV[pix-(int)pppx_prev])/(pppx_prev-0.5f);
+		int k=0;///1;
+				for (int i=pix-(int)pppx_prev;i<pix;i++)
+				{
+				
+					if (hops[i]!=-1) continue;
+					result_YUV[i]=result_YUV[pix-(int)pppx_prev]+(int)(alfa*k);
+					if (result_YUV[i]>255) result_YUV[i]=255;
+					if (result_YUV[i]<0) result_YUV[i]=0;
+				k++;	
+				}
+		}
+		 
+		
+		
+		
+		last_small_hop=small_hop;
+		//pix++;
+		pix+=(int)(pppx+0.5f);
+		int xant=x;
+		x+=(int)(pppx+0.5f);
+		
+		//x=pix%img.width;//esto es una correccion. aun no se que falla
+		//if (x>511) x=511;
+		
+		
+		//actualizamos pppx
+		
+		pppx_prev=pppx;
+		float maxpppx=4;//4;
+		float inc=0.33f;//0.25f;//0.25f;//maxpppx/8;//0.5f;
+		//int segment_size=img.width/32;
+		int segment_index_prev=segment_index;
+		segment_index=(pix%img.width)/segment_size;
+		if (segment_index==32) segment_index=31;
+		//fin de bloque
+		
+		
+		
+		int segment_sizey=4;
+		//
+		//if ( y>0 && (y/segment_size>(y-1)/segment_size ) && (x/segment_size>xant/segment_size ))
+		if (segment_index>0 && y>0 && (y/segment_sizey>(y-1)/segment_sizey ) && (segment_index_prev!= segment_index))
+		{
+		//hay que actualizar pppx en el segmento i segun la pr calculada en i
+		//segun la pr toca un ppp pero debemos ajustarlo
+		float ppp=0;
+		pr[segment_index-1]=pr[segment_index-1]/counterpix[segment_index-1];//(segment_size*segment_size);
+		
+		//saturacion
+		//if (pr[segment_index-1]>0.5f) pr[segment_index-1]=1;
+		if (pr[segment_index-1]<0.25) pr[segment_index-1]=0;
+		pr[segment_index-1]=pr[segment_index-1]*2;
+		
+		//System.out.println(" PR:"+pr[segment_index-1]+"----------------------------------------");
+		ppp=1+maxpppx-pr[segment_index-1]*maxpppx;
+		
+		//ppp=(segment_index-1)/4;
+		
+		//ppp=4;//(float)Math.random()*16;
+		
+		int dere=segment_index;
+		if (dere==num_segments) dere= segment_index-1;
+		//System.out.println("segment_index:"+segment_index+"   dere:"+dere);
+		
+	    if (ppp>=pppxi[segment_index-1]+inc) pppxi[segment_index-1]=(pppxi[segment_index-1]+pppxi[dere])/2 +inc;
+	    if (ppp<=pppxi[segment_index-1]-inc) pppxi[segment_index-1]=(pppxi[segment_index-1]+pppxi[dere])/2 -inc;
+	    
+	   
+	    //pppxi[segment_index-1]=ppp;//x/segment_size;;
+	    
+	    //System.out.println("ppp:"+ppp+"  pppi="+pppxi[segment_index-1]);
+	    if (pppxi[segment_index-1]<1) pppxi[segment_index-1]=1;
+		if (pppxi[segment_index-1]>maxpppx) pppxi[segment_index-1]=maxpppx;
+		
+		
+		
+	    pr[segment_index-1]=0;
+	    counterpix[segment_index-1]=0;
+		}
+		
+		
+		
+		
+		
+		
+		if (segment_index_prev==segment_index)	
+		{
+		//actualizacion de PR del segmento
+			int jump=hop_number;
+			if (jump>=4) jump=jump-4;
+			else jump=4-jump;
+			
+			if (hop_number>4) sign=1;
+			else if (hop_number<4) sign=-1;
+			
+			//if (Math.abs(sign-signprev)==2) pr[segment_index]+=jump;
+			if (jump>0) jump--;
+			pr[segment_index]+=jump;
+			counterpix[segment_index]++;
+		}	
+	
+		
+		
+		
+		signprev=sign;
+		
+		//System.out.println("seg:"+segment_index+" pr:"+pr[segment_index]+"   tamseg="+segment_size+" pppx:"+pppx+ " x:"+x+" xant:"+xant+ " y:"+y);
+		//System.out.println("xs="+x%segment_size+"  xas="+xant%segment_size);
+		
+		
+		
+	}//for x
+	
+	float minpppx=255;
+	for (int i=0 ;i<num_segments;i++)
+	{
+		if (pppxi[i]<minpppx) minpppx=pppxi[i];
+	}
+	if (minpppx>1)pppy=2;
+	else pppy=1;
+	
+	
+	//pppy=1;
+	System.out.println("y:"+y+"  pppy:"+pppy);
+	if (pppy==2 && y<img.height)
+		for (int i=0 ;i<img.width;i++)
+		{
+			hops[(y+1)*img.width+i]=-2;
+		}
+	
+	y+=pppy;
+}//for y
+
+System.out.println("quantization done");
+
+//System.out.println("center of  error:"+error_center/(img.width*img.height));
+//System.out.println("average of  error:"+error_avg/(img.width*img.height));
+System.out.println("----------------------------------------------------------");
+
+//posfilter(result_YUV);
+
+
+
+//posthops(hops, result_YUV);
+
+desentrelazado(result_YUV,hops);
+
+
+}//end function
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void desentrelazado( int[] result_yuv,int[] hops)
+{
+	
+for (int y=0;y<img.height;y++)  {
+	for (int x=0;x<img.width;x++)  {
+		int pix=y*img.width+x;
+		//result_yuv[pix]=255;
+		//if (y>0 && y<511 && y%2==1)
+		if (y>0 && y<img.height-1)
+		if (hops[y*img.width+x]==-2)
+				
+		result_yuv[pix]=(result_yuv[pix-img.width]+result_yuv[pix+img.width])/2;
+		}
+		//if (x%2==1 && hops[pix-1]<=maxh && hops[pix-1]>=minh) {hops[pix]=-1;}
+		//if (y>0 && y%2==0 && hops[pix-1]<=maxh && hops[pix-1]>=minh){hops[pix]=-1;}
+		
+		
+	}
+
+}
 }//end class

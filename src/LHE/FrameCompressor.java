@@ -190,7 +190,7 @@ public float[] compressBasicFrame(String optionratio)
 	System.out.println("==========================");
 	System.out.println("  dynamic RLC parameters->  TAMANO_RLC="+lhe.TAMANO_RLC+"  TAMANO_condicion="+lhe.TAMANO_condicion);
 	///Dynamic RLC savings
-	int net_savings=lhe.postRLC(img.hops[0],img.LHE_YUV[0],0,img.width-1,0,img.height-1);
+	int net_savings=lhe.postRLC_v02(img.hops[0],img.LHE_YUV[0],0,img.width-1,0,img.height-1);
 	lenbin=lenbin-net_savings;	
 	System.out.println("image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
 	
@@ -219,8 +219,10 @@ float[] result=new float[2];//PSNR and bitrate
 	BynaryEncoder be=new BynaryEncoder(img.width,img.height);
 	
 	int lenbin=be.hopsToBits_simple(img.hops[0], 0, 0, img.width-1, img.height-1);
-	int ahorroRLC=lhe.postRLC(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	int ahorroRLC=lhe.postRLC_v02(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	
 	System.out.println("lenbin:"+lenbin+"   rlc savings:"+ahorroRLC);
+	System.out.println("SIMPLE LHE sin RLC: "+((float)lenbin/(img.width*img.height)));
 	lenbin=lenbin-ahorroRLC;
 	result[1]=lenbin;
 	System.out.println("SIMPLE LHE image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
@@ -247,13 +249,15 @@ public float[] compressLHE2()
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento20(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento30(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento31(img.hops[0],img.LHE_YUV[0]);
-	//lhe.quantizeOneHopPerPixel_LHE2_experimento33(img.hops[0],img.LHE_YUV[0]);// bueno
+	//lhe.quantizeOneHopPerPixel_LHE2_experimento33(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento35(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_LHE2_experimento36(img.hops[0],img.LHE_YUV[0]);
-	lhe.quantizeOneHopPerPixel_LHE2_experimento38(img.hops[0],img.LHE_YUV[0]);
-	//lhe.quantizeOneHopPerPixel_LHE2_experimento39(img.hops[0],img.LHE_YUV[0]);
-	//lhe.esperanza_matematica_v001(img.hops[0],img.LHE_YUV[0]);// bueno
+	//lhe.quantizeOneHopPerPixel_LHE2_experimento38(img.hops[0],img.LHE_YUV[0]);//bueno
 	
+	//lhe.quantizeOneHopPerPixel_LHE2_experimento39(img.hops[0],img.LHE_YUV[0]);
+	//lhe.esperanza_matematica_v001(img.hops[0],img.LHE_YUV[0]);
+	
+	lhe.quantize_LHE2_experimento_40(img.hops[0],img.LHE_YUV[0]);
 	
 	img.YUVtoBMP("./output_debug/LHE2_removed.bmp",img.LHE2_removed_pix);
 	
@@ -269,40 +273,15 @@ public float[] compressLHE2()
 	System.out.println(" PSNR LHE2:"+psnr);
 	result[0]=(float)psnr;
 	
-	//ready for compute bit rate
-	BynaryEncoder be=new BynaryEncoder(img.width,img.height);
-	int total_bits=0;//total bits taken by the image
-	
-	//save hops
-	if (DEBUG) img.saveHopsToTxt("./output_debug/hops_LHE2_signed.txt",true);
-	if (DEBUG) img.saveHopsToTxt("./output_debug/hops_LHE2_unsigned.txt",false);
-	
-	//convert hops into symbols...
-	//realmente esto no convierte a bits, sino a simbolos del 1 al 9
-	// de todos modos lo que se usa para calcular luego los bpp son las estadisticas
-	// de los simbolos. es decir, cuantos hay de cada y con huffman se hace
-	be.hopsToBits_v3(img.hops[0],0,0, img.width-1,img.height-1,0,0);
-	
-	be.saveSymbolsToTxt("./output_debug/Symbols_LHE2.txt");
-	
-	
-	//convert symbols into bits...
-	Huffman huff=new Huffman(10);
-	for (int l=0;l<10;l++)
-		{System.out.println(" symbolos ["+l+"]="+be.down_stats_saco[0][l]);
+	//bitrate
+		BynaryEncoder be=new BynaryEncoder(img.width,img.height);
 		
-		}
-	int lenbin=huff.getLenTranslateCodes(be.down_stats_saco[0]);
-	
-	System.out.println("total_hops: "+be.totalhops);
-	System.out.println("image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
-	
-	System.out.println("lhe2 bits ahorrados:"+lhe.LHE2_resta);
-	lenbin=lenbin-lhe.LHE2_resta;
+	int lenbin=be.hopsToBits_simple(img.hops[0], 0, 0, img.width-1, img.height-1);
+	int ahorroRLC=lhe.postRLC_v02(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	System.out.println("lenbin:"+lenbin+"   rlc savings:"+ahorroRLC);
+	lenbin=lenbin-ahorroRLC;
+	result[1]=lenbin;
 	System.out.println("LHE2 image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
-	
-	
-	result[1]=(float)lenbin/(img.width*img.height);
 	
 	return result;
 }
@@ -473,7 +452,7 @@ public float[] compressFrame(float ql)
 				//lhe.quantizeDownsampledBlock_R4_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				
 				//lhe.quantizeDownsampledBlock_R2(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
-				net_savings+=lhe.postRLC(img.hops[0],img.downsampled_LHE_YUV[0],bi.xini,bi.downsampled_xfin, bi.yini,bi.downsampled_yfin);
+				net_savings+=lhe.postRLC_v02(img.hops[0],img.downsampled_LHE_YUV[0],bi.xini,bi.downsampled_xfin, bi.yini,bi.downsampled_yfin);
 				
 				//esta es sin boundaries:
 				    //lhe.quantizeDownsampledBlock_SinBoundaries(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
