@@ -117,6 +117,20 @@ public class ImgUtil {
 	//color mode 0:444 , 1:422 2:420 3:400
 	//color_mode=3 is black&white
 	public int color_mode=0;
+	
+	
+	
+	//funcionalidad de downsampling
+	int width_down=0;
+	int height_down=0;
+	
+	//funcionalidad de scale
+	int width_scaled=0;
+	int height_scaled=0;
+	
+	//funcionalidad de diferencia entre 2 frames 
+	int[] dif;
+		
 	//******************************************************************************
 	public ImgUtil()
 	{}
@@ -259,8 +273,498 @@ height=orig.height;
 				{
 					YUV[0][(y*width)/2+x/2]=YUV[0][(y*width)+x];
 				}
-
+		}
+	//*******************************************************************************
+	public void down(int width_final, int height_final, int modex,int modey, int[] pixels)
+	{
+		//ratio is denominator
+		//1:1 = 1ppp
+		//1:4 = 4ppp
+		
+		//primero hay que hacer down en x y luego down en Y
+		//estas funciones ya cambian el tamaño
+		downx(width_final,modex,pixels);
+		downy(height_final,modey,pixels);
+		
+		
+		
+		
+	}	
+	//*******************************************************************************
+	public void downx(int width_final,int mode, int[] pixels)
+	{
+		//mode=0 NN
+		//mode=1 AVG
+		
+		//width_down=(int)(width/ratio);
+		width_down=width_final;
+		float ratio=(float)width/(float)width_final;
+		System.out.println(" ratio x="+ratio+ " widthdown="+width_down);
+		//mode NN
+		if (mode==0)
+		{
+		for (int y=0;y<height;y+=1)
+			for (int x=0;x<width_down;x+=1)
+			{
+				pixels[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
+			}
+		}//end mode NN
+		//---------------------------------------
+		else if (mode==1)
+		{
+		//float porcenti=0;
+		//float porcentf=0;
+		for (int y=0;y<height;y+=1)
+		{
+			float porcenti=0;
+			float porcentf=0;
+			float xinif=0;//(float)(x*ratio);
+			float xfinf=0;
+			for (int x=0;x<width_down;x+=1)
+			{
+				// forma sencilla
+				/*
+				int xini=(y*width)+(int)(x*ratio);
+				int xfin=(y*width)+(int)((x+1)*ratio);
+				int color=0;
+				for (int i=xini;i<xfin;i++)	color+=pixels[i];
+				pixels[(y*width_down)+x]=color/(xfin-xini);
+				
+			*/
+				
+				//  forma mas correcta 
+				//----------------------
+				xinif=xfinf;
+				int xini=(int)xinif;
+				porcenti=1f-porcentf;
+				xfinf=xinif+ratio;
+				if (xfinf>width-1) xfinf=width-1;
+				int xfin=(int)xfinf;
+				porcentf=xfinf-(int)xfin;
+				float color=pixels[y*width+xini]*porcenti;
+				for (int i=xini+1;i<xfin;i++) color+=pixels[y*width+i];
+				color+=pixels[y*width+xfin]*porcentf;
+				pixels[(y*width_down)+x]=(int)(color/(xfinf-xinif));
+				
+				
+			}
+		}
+		}//end mode AVG
+		
+		width=width_down;
 	}
+	//*******************************************************************************
+	public void downy(int height_final ,  int mode, int[] pixels)
+	{
+		
+		//mode=0 NN
+		//mode=1 AVG
+		height_down=height_final;
+		float ratio=(float)height/(float)height_final;
+		System.out.println(" ratio y="+ratio+ " heightdown="+height_down);
+		//mode NN
+		if (mode==0)
+		{
+			
+			for (int x=0;x<width;x+=1) 
+				for (int y=0;y<height_down;y+=1)	
+				
+			      {
+				  	
+			      pixels[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
+			
+			      }
+		}
+		else if (mode==1)
+		{
+			
+			for (int x=0;x<width;x+=1) 
+			{
+				float porcenti=0;
+				float porcentf=0;
+				float yinif=0;
+				float yfinf=0;
+				for (int y=0;y<height_down;y+=1)	
+				{
+					
+					//forma sencilla
+					//---------------
+					/*
+					int pixi=(int)(y*ratio) *width+x;
+					int pixf=(int)((y+1)*ratio) *width+x;
+					int color=0;
+					for (int i=pixi;i<pixf;i+=width)
+					color+=pixels[i];
+					
+					pixels[(y*width)+x]=color*width/(pixf-pixi);
+					*/
+					
+					//forma mas correcta
+					//------------------
+					//float yinif=(float)(y*ratio);
+					yinif=yfinf;//(float)(y*ratio);
+					int yini=(int) yinif;
+					porcenti=1f-porcentf;
+					//float yfinf=yinif+ratio;
+					yfinf=yinif+ratio;
+					if (yfinf>height-1) yfinf=height-1;
+					int yfin=(int)yfinf;
+					porcentf=yfinf-(int)yfin;
+					float color=pixels[yini*width+x]*porcenti;
+					for (int i=yini+1;i<yfin;i++)	color+=pixels[i*width+x];
+					color+=pixels[yfin*width+x]*porcentf;
+					pixels[(y*width_down)+x]=(int)(color/(yfinf-yinif));
+								
+				}
+			
+			
+					}
+		}//end mode 1
+		
+		
+		height=height_down;
+	}
+	//*******************************************************************************
+	//*******************************************************************************
+	public void scale(int width_final, int height_final, int modex,int modey,int[] pixels)
+		{
+			//ratio is denominator
+			//1:1 = 1ppp
+			//1:4 = 4ppp
+			//width_scaled=(int)(width*ratiox+0.5f);
+			//height_scaled=(int)(height*ratioy);
+			
+			
+			//primero hay que hacer scale en y y luego down en x
+			scaley(height_final,modey, pixels);
+			scalex(width_final,modex,pixels);
+			//scaley(ratioy,mode);
+			//cambiamos el tamano.
+			//como la imagen original es mas grande, los tamanos de los bufferes son 
+			//todos grandes y no pasa nada
+			
+			
+			
+		}	
+		//*******************************************************************************
+	//*******************************************************************************
+		public void scalex(int width_final,int mode, int[] pixels)
+		{
+			
+			//width_scaled=(int)(width*ratio+0.5f );
+			width_scaled=width_final;
+			float ratio=(float)width_scaled/(float)width;
+			
+			
+			System.out.println("scaling "+width+" to "+width_scaled);
+			//mode NN
+			if (mode==0)
+			{
+			for (int y=height-1;y>=0;y--)
+				for (int x=width_scaled-1;x>=0;x--)
+				{
+					pixels[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
+				}
+			}//end mode NN
+			else if (mode==1)//bilineal
+			{
+				for (int y=height-1;y>=0;y--)
+					for (int x=0;x<width;x++)
+					{
+						int pixi=(y*width)+x;
+						int pixf=pixi;
+						if (x<width) pixf=(y*width)+x+1;
+						
+						int colorini=pixels[pixi];
+						int colorfin=pixels[pixf];
+						float alfa=(colorfin-colorini)/(ratio);
+						int k=0;
+						int pixis=(int)((x)*ratio+0.5f);
+						
+						int pixfs=(int)((x+1)*ratio+0.5f);
+						if (pixfs>width_scaled) pixfs=width_scaled;
+						for (int i=pixis;i<pixfs;i++)
+						{
+						pixels[y*width_scaled+i]=colorini+(int)(k*alfa);
+						k++;
+						}
+					}
+			}
+				
+			
+			width=width_scaled;
+		}
+	//*******************************************************************************
+	public void scaley(int height_final,  int mode,int[] pixels)
+		{
+		
+		//el modo bilineal es peor que el modo vecino en caso de usarse AVG en down
+		//esto es debido a que el color mas parecido al real de los pixels que han sido
+		//fusionados en un color es precisamente ese color y no una gradacion
+		height_scaled=height_final;
+		
+		float ratio=(float)height_scaled/(float)height;
+		
+			//mode NN
+			if (mode==0)
+			{
+			for (int x=width-1;x>=0;x--) 
+			 for (int y=height_scaled-1;y>=0;y--)		
+				{
+				 	pixels[y*width+x]=pixels[(int)(y/ratio)*width+x];
+				}
+			}
+			else if (mode==1)//bilineal
+			{
+				for (int x=width-1;x>=0;x--) 
+				{
+					//int yf=height_scaled-1;
+					 for (int y=height-1;y>=0;y--)		
+						{
+						 
+						    //hay que multiplicar por y+1 por que el cero tambien cuenta
+						    int pixi=(int)(y+1)*width+x;
+							int pixf=pixi;
+							if (y>0) pixf=((y)*width)+x;
+							
+							int colorini=pixels[pixi];
+							int colorfin=pixels[pixf];
+							float alfa=(colorfin-colorini)/ratio;
+							int k=0;
+							
+							int pixis=(int)((y+1)*ratio+0.5f);
+							//System.out.println("y:"+y+"  -->"+pixis+" ratio:"+ratio);
+							int pixfs=(int)((y)*ratio+0.5f);
+							if (pixfs<0) pixfs=0;
+							if (pixis>height_scaled-1) pixis=height_scaled-1;
+							
+							
+							for (int i=pixis;i>pixfs;i--)
+							  {
+							  pixels[i*width+x]=	colorini+(int)(k*alfa);
+							  k++;
+						  	  }
+						 
+						
+						}	
+				}
+			}
+			
+			
+			
+		height=height_scaled;
+		}
+		//*******************************************************************************
+	
+	
+	
+	public void filterEPX(int[] pixels, int u1,int u2)
+	{
+		
+		
+		System.out.println("filtering EPX...");
+		for (int y=1; y<height-1;y++)
+		{
+			for (int x=1; x<width-1;x++)
+			{
+				//filter1pixEPX2x(im,y,x,u); //filtra 1pixel
+				//filter1pixEPX2x_002(im,y,x,u); //filtra 1pixel
+				//filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
+				filter1pixEPX(pixels,y,x,u1,u2); //filtra 1pixel
+			}	
+		}
+		System.out.println("filtered !");
+	}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+	//*************************************************************************************
+	public void filter1pixEPX(int[] im,int y,int x, int um1, int um2)
+	{
+		//012
+		//345
+		//678
+		//System.out.println("estoy en 002");
+		
+		int[] matriz=new int[9];
+		boolean modif=false;
+		
+		int umbral=11;
+		//umbral =um;
+		int u1=um1;//11;
+		int u2=um2;//16;
+		
+		int i=y*width+x;		
+		matriz[0]=im[i-1-width];
+		matriz[1]=im[i-width];
+		matriz[2]=im[i+1-width];
+		matriz[3]=im[i-1];
+		matriz[4]=im[i];
+		matriz[5]=im[i+1];
+		matriz[6]=im[i-1+width];
+		matriz[7]=im[i+width];
+		matriz[8]=im[i+1+width];
+		
+		//marco arriba izquierdo 
+		if ((Math.abs(matriz[1]-matriz[2])<u1) &&
+		    (Math.abs(matriz[3]-matriz[6])<u1) &&
+		    (Math.abs(matriz[1]-matriz[3])<u2) 
+		   // && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+		    )
+		{
+			int mezcla=(matriz[1]+matriz[3])/2;
+			//mezcla=(matriz[1]+matriz[2]+matriz[3]+matriz[6])/4;
+			
+			im[i]=mezcla;
+			modif=true;
+		}
+		//marco arriba derecho
+		  if ((Math.abs(matriz[0]-matriz[1])<u1) &&
+			    (Math.abs(matriz[5]-matriz[8])<u1) &&
+			    (Math.abs(matriz[5]-matriz[1])<u2) 
+			//    && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+			    )
+		 {
+			int mezcla=(matriz[1]+matriz[5])/2;
+			 //mezcla=(matriz[0]+matriz[1]+matriz[5]+matriz[8])/4;
+			//mezcla=matriz[2];
+			 im[i]=mezcla;
+			 modif=true;
+		 }
+		//marco abajo izq
+		if ((Math.abs(matriz[7]-matriz[8])<u1) &&
+				    (Math.abs(matriz[0]-matriz[3])<u1) &&
+				    (Math.abs(matriz[3]-matriz[7])<u2) 
+			//	    && (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+				    )
+			{
+				int mezcla=(matriz[3]+matriz[7])/2;
+				//mezcla=(matriz[0]+matriz[3]+matriz[7]+matriz[8])/4;
+			//	mezcla=matriz[6];
+				im[i]=mezcla;
+				modif=true;
+			}
+			//marco abajo dere
+			if ((Math.abs(matriz[6]-matriz[7])<u1) &&
+			    (Math.abs(matriz[2]-matriz[5])<u1) &&
+				(Math.abs(matriz[7]-matriz[5])<u2) 
+			//	&& (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+						    )
+			{
+			int mezcla=(matriz[7]+matriz[5])/2;
+				//mezcla=(matriz[6]+matriz[7]+matriz[5]+matriz[2])/4;
+			//mezcla=matriz[8];
+				im[i]=mezcla;
+				modif=true;
+			}
+			
+			//System.out.print("caca");
+			//modif=true;
+			if (!modif)
+			{
+				//marco arriba izquierdo 
+				if (((Math.abs(matriz[1]-matriz[2])<u1) &&
+				    //(Math.abs(matriz[3]-matriz[6])<umbral) &&
+				    (Math.abs(matriz[1]-matriz[3])<u2) 
+				   // && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+				    )) 
+				    {
+					int mezcla=(matriz[1]+matriz[3]+matriz[4])/3;
+					//mezcla=(matriz[1]);//+matriz[3])/2;
+					mezcla=(matriz[4]+matriz[1])/2;
+					im[i]=mezcla;
+					modif=true;
+				    }
+				  if  
+				    ((Math.abs(matriz[3]-matriz[6])<u1) &&
+				     (Math.abs(matriz[1]-matriz[3])<u2)		
+				    		)
+				{
+					int mezcla=(matriz[1]+matriz[3]+matriz[4])/3;
+					mezcla=(matriz[3]+matriz[4])/2;
+					im[i]=mezcla;
+					modif=true;
+				}
+				//marco arriba derecho
+				  if ((Math.abs(matriz[0]-matriz[1])<u1) &&
+					   // (Math.abs(matriz[5]-matriz[8])<umbral) &&
+					    (Math.abs(matriz[5]-matriz[1])<u2) 
+					
+					    )
+					    {
+					  int mezcla=(matriz[1]+matriz[5]+matriz[4])/3;
+						mezcla=(matriz[1]+matriz[4])/2;
+						 im[i]=mezcla;
+						 modif=true;
+					    }
+					    
+					  if
+					  ((Math.abs(matriz[5]-matriz[8])<u1) &&
+							  (Math.abs(matriz[5]-matriz[1])<u2) 
+							  )
+				 {
+					int mezcla=(matriz[1]+matriz[5]+matriz[4])/3;
+					mezcla=(matriz[5]+matriz[4])/2;
+					 im[i]=mezcla;
+					 modif=true;
+				 }
+				//marco abajo izq
+				if ((Math.abs(matriz[7]-matriz[8])<u1) &&
+						    //(Math.abs(matriz[0]-matriz[3])<umbral) &&
+						    (Math.abs(matriz[3]-matriz[7])<umbral) 
+					//	    && (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+						    )
+						    {
+					int mezcla=(matriz[3]+matriz[7]+matriz[4])/3;
+					mezcla=(matriz[7]+matriz[4])/2;
+					im[i]=mezcla;
+					modif=true;
+					
+						    }
+						    
+					if	    
+						    
+					((Math.abs(matriz[0]-matriz[3])<u2) &&
+							(Math.abs(matriz[3]-matriz[7])<umbral)
+							
+							)
+					
+					
+					{
+						int mezcla=(matriz[3]+matriz[7]+matriz[4])/3;
+						mezcla=(matriz[3]+matriz[4])/2;//+matriz[7])/2;
+						im[i]=mezcla;
+						modif=true;
+					}
+					//marco abajo dere
+					if ((Math.abs(matriz[6]-matriz[7])<u1) &&
+					    //(Math.abs(matriz[2]-matriz[5])<umbral) &&
+						(Math.abs(matriz[7]-matriz[5])<u2) 
+					//	&& (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+								    )
+						  {
+						int mezcla=(matriz[7]+matriz[5]+matriz[4])/3;
+						mezcla=(matriz[7]+matriz[4])/2;//+matriz[5])/2;
+							im[i]=mezcla;
+							modif=true;
+						   }
+								    
+						if (		    
+						
+								(Math.abs(matriz[2]-matriz[5])<u1) &&
+								(Math.abs(matriz[7]-matriz[5])<u2)
+								)
+					{
+					int mezcla=(matriz[7]+matriz[5]+matriz[4])/3;
+					mezcla=(matriz[5]+matriz[4])/2;//+matriz[5])/2;
+						im[i]=mezcla;
+						modif=true;
+					}
+				
+				
+			}
+			
+	}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	public void  createChess()
 	{
 		int color=192;
@@ -3811,5 +4315,108 @@ public void setMinCountdown()
 		countdown[i]=-3;
 	}
 }
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void computedif(int[] orig, int[] degradada)
+{
+	
+	dif=new int[width*height]; //entero positivo o negativo
+	for (int y=0;y<height;y++)
+	for (int x=0;x<width;x++)
+	{	
+		
+		//esta division genera un ruido de cuantizacion visible
+		//dif[y*width+x]=(orig[y*width+x]- degradada[y*width+x])/2+128;
+		
+		//esto es mejor. 3 tramos
+		int valordif=orig[y*width+x]- degradada[y*width+x];
+		int signo=1;
+		
+		if (valordif<0) {signo=-1; valordif=-valordif;}
+		//3 tramos
+		//--------
+			
+		  if (valordif<32)//primeros 
+		  {
+			//dif[y*width+x]=valordif;
+		  }
+		  else if (valordif<64) // con 64 cubre hasta 32+32*2= 96
+		  {
+			  valordif=valordif-32;
+			  valordif=(32+valordif/2);
+		  }
+		  else 
+		  {
+			  valordif=valordif-64;
+		      valordif=(32+32/2+valordif/3);
+		  }
+		  
+		  valordif=signo*valordif+128;
+		  dif[y*width+x]=valordif;
+		  
+	}//for
+		
+		
+	
+	
+	
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void sumadif(int[] A, int[] B, int[] C)
+{
+	//supongo que estoy sumando algo de tipo diferencia
+	for (int y=0;y<height;y++)
+		for (int x=0;x<width;x++)
+			{
+			
+			//esto produce ruido
+			//C[y*width+x]=A[y*width+x]+2*(B[y*width+x]-128);
+			
+			
+			//esto es mejor. 3 tramos
+			//3 tramos
+			//--------
+			int valordif=	B[y*width+x]-128;
+			int signo=1;
+			if (valordif<0) {signo=-1; valordif=-valordif;}
+			
+				
+			  if (valordif<32)//primeros 
+			  {
+				//dif[y*width+x]=valordif;
+			  }
+			  else if (valordif<64) // con 64 cubre hasta 32+32*2= 96
+			  {
+				  valordif=valordif-32;
+				  valordif=(32+valordif*2);
+			  }
+			  else 
+			  {
+				  //valordif=valordif-48;
+			      valordif=valordif-64;
+				  valordif=(32+64+valordif*3);
+			  }
+			  
+			  valordif=signo*valordif;
+			  C[y*width+x]=A[y*width+x]+valordif;
+			  
+			  
+			
+			if (C[y*width+x]<0) C[y*width+x]=0;
+			if (C[y*width+x]>255) C[y*width+x]=255;
+			}
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void copy(int[] orig, int[] des)
+{
+	for (int y=0;y<height;y++)
+		for (int x=0;x<width;x++)
+			{des[y*width+x]=orig[y*width+x];
+			}
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 }// end class
 

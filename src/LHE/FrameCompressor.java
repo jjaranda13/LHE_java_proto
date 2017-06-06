@@ -201,17 +201,23 @@ public float[] compressBasicFrame(String optionratio)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 public float[] compressSIMPLELHE()
 {
+	// esta funcion tiene un coder entropico estatico, no calcula arbol huffman
+	// por ello es mucho mas simple
 float[] result=new float[2];//PSNR and bitrate
 	
 	img.YUVtoBMP("./output_debug/orig_YUV_BN.bmp",img.YUV[0]);
 	System.out.println(" quantizing into hops...");
 	System.out.println(" result image is ./output_img/SIMPLE_LHE_YUV.bmp");
+	
+	lhe.prefilter_002();
 	lhe.quantize_SIMPLELHE_001(img.hops[0],img.LHE_YUV[0]);
 	//ready to save the result in BMP format
+	lhe.postfilter_002();
 	img.YUVtoBMP("./output_img/SIMPLE_LHE_YUV.bmp",img.LHE_YUV[0]);
 	
 	//PSNR
 	double psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHE_YUV.bmp");
+	// psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHE_YUVinter2.bmp");
 	System.out.println(" PSNR LHE3:"+psnr);
 	result[0]=(float)psnr;
 	
@@ -225,12 +231,85 @@ float[] result=new float[2];//PSNR and bitrate
 	System.out.println("SIMPLE LHE sin RLC: "+((float)lenbin/(img.width*img.height)));
 	lenbin=lenbin-ahorroRLC;
 	result[1]=lenbin;
+	//img.width=512;
+	//img.height=512;
 	System.out.println("SIMPLE LHE image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
-	
+	System.out.println("width:"+img.width+"  height"+img.height);
 	return result;
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int typey, boolean filter)
+{
+	// esta funcion tiene un coder entropico estatico, no calcula arbol huffman
+	// por ello es mucho mas simple
+    float[] result=new float[2];//PSNR and bitrate
+	 
+    
+     
+	img.YUVtoBMP("./output_debug/orig_YUV_BN.bmp",img.YUV[0]);
+	
+	System.out.println(" result image is ./output_img/SIMPLE_LHESAMPLED_YUV.bmp");
+	
+	System.out.println(" sampling...");
+	
+	
+	//downsampling de la imagen original
+	//------------------------------------
+	int ancho_orig=img.width;
+	int alto_orig=img.height;
+	int mode=1; 
+	
+	img.down((int)(img.width/ratiox),(int)(img.height/ratioy),typex,typey, img.YUV[0]);
+	//img.down((int)(img.width/2f),(int)(img.height/2f),1,1, img.YUV[0]);
+	
+	
+	
+	img.YUVtoBMP("./output_img/SAMPLED_YUV.bmp",img.YUV[0]);
+	
+	System.out.println(" quantizing into hops...");
+	lhe.quantize_SIMPLELHE_001(img.hops[0],img.LHE_YUV[0]);
+	//ready to save the result in BMP format
+	
+	//bitrate
+	BynaryEncoder be=new BynaryEncoder(img.width,img.height);
+	
+	int lenbin=be.hopsToBits_simple(img.hops[0], 0, 0, img.width-1, img.height-1);
+	int ahorroRLC=lhe.postRLC_v02(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	
+	System.out.println("lenbin:"+lenbin+"   rlc savings:"+ahorroRLC);
+	System.out.println("SIMPLE LHE sin RLC: "+((float)lenbin/(ancho_orig*alto_orig)));
+	
+	
+	
+	lenbin=lenbin-ahorroRLC;
+	result[1]=lenbin;
 
+	
+	//antes del escalado, de cara al video, voy a guardar la imagen "error"
+	//-------------------------------
+	
+	//escalado
+	//-------------
+    img.scale(ancho_orig,alto_orig,0,0,img.LHE_YUV[0]);
+	
+    //AQUI TENGO QUE METER EL FILTRO
+    
+    if (filter) img.filterEPX(img.LHE_YUV[0],16,16);
+	img.YUVtoBMP("./output_img/SIMPLE_LHESAMPLED_YUV.bmp",img.LHE_YUV[0]);
+	
+	//PSNR
+	double psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHESAMPLED_YUV.bmp");
+	// psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHE_YUVinter2.bmp");
+	System.out.println(" PSNR:"+psnr);
+	result[0]=(float)psnr;
+	
+	
+	System.out.println("SIMPLE LHE image_bits: "+lenbin+ "   bpp:"+((float)lenbin/(img.width*img.height)));
+	System.out.println("width:"+img.width+"  height"+img.height);
+	return result;
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 public float[] compressLHE2()
@@ -265,6 +344,8 @@ public float[] compressLHE2()
 	//PRblock.img=img;
 	//grid.computeMetrics();//compute metrics of all Prblocks, equalize & quantize
 	//ready to save the result in BMP format
+	
+	//img.filterEPX(img.LHE_YUV[0],16,16);
 	img.YUVtoBMP("./output_img/LHE2_YUV.bmp",img.LHE_YUV[0]);
 	
 	//ready to compute PSNR

@@ -9813,8 +9813,8 @@ public void quantize_SIMPLELHE_001(int[] hops,int[] result_YUV)
 
 System.out.println("quantizying LHE3...");
 
-int max_hop1=10;//10;//8;//8;//16;//8;// hop1 interval 4..8
-int min_hop1=6;//4;//4;// 
+int max_hop1=10;//10;
+int min_hop1=6; 
 
 
 int start_hop1=(max_hop1+min_hop1)/2;
@@ -9901,6 +9901,7 @@ for (int y=0;y<img.height;y++)  {
 		if (oc-hop0>=0) 
 		{
 			for (int j=4;j<=8;j++) {
+			//for (int j=4;j<=5;j++) {
 				e2=oc-pccr[hop1][hop0][rmax][j];
 				if (e2<0) e2=-e2;
 				if (e2<emin) {hop_number=j;emin=e2;
@@ -9915,6 +9916,7 @@ for (int y=0;y<img.height;y++)  {
 		else 
 		{
 			for (int j=4;j>=0;j--) {
+			//for (int j=4;j>=3;j--) {
 				e2=pccr[hop1][hop0][rmax][j]-oc;
 				if (e2<0) e2=-e2;
 				if (e2<emin) {hop_number=j;emin=e2;
@@ -9930,7 +9932,17 @@ for (int y=0;y<img.height;y++)  {
 		//assignment of final color value
 		//--------------------------------
 		
-		result_YUV[pix]=pccr[hop1][hop0][rmax][hop_number];
+		int val_medio=pccr[hop1][hop0][rmax][hop_number];
+		/*
+		if (hop_number>5)
+		{	val_medio=(pccr[hop1][hop0][rmax][hop_number]+pccr[hop1][hop0][rmax][hop_number-1])/2;}
+		if (hop_number<3)
+		{val_medio=(pccr[hop1][hop0][rmax][hop_number]+pccr[hop1][hop0][rmax][hop_number+1])/2;}
+		*/
+		
+		
+		//result_YUV[pix]=pccr[hop1][hop0][rmax][hop_number];
+		result_YUV[pix]=val_medio;
 		hops[pix]=hop_number; 
         
 		//if (compute_hop==false && y%2==1) result_YUV[pix]=result_YUV[pix-img.width];
@@ -10433,4 +10445,96 @@ for (int y=0;y<img.height;y++)  {
 	}
 
 }
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void prefilter_002()
+{
+	int [] img_tmp=new int[img.width*img.height];
+	
+	//for (int y=0;y<img.height;y++)
+		for (int y=img.height-1;y>=0;y--)
+			
+		//for (int x=0;x<img.width;x++)
+			for (int x=img.width-1;x>=0;x--)
+		{
+			int pix=y*img.width+x;
+			//if (y>0) img_tmp[pix]=(img.YUV[0][pix]- img.YUV[0][pix-img.width])/2+128;
+			
+			//if (y>0) img.YUV[0][pix]=(img.YUV[0][pix]- img.YUV[0][pix-img.width])/2+128;
+			//if (img.YUV[0][pix]<-128)img.YUV[0][pix]=-128;
+			//if (img.YUV[0][pix]>127)img.YUV[0][pix]=127;
+			//if (x>0)if (img.YUV[0][pix]>img.YUV[0][pix-1]+32)img.YUV[0][pix]=img.YUV[0][pix-1]+32;
+			//img.YUV[0][pix]=img.YUV[0][pix]*2-128;
+			//if (img.YUV[0][pix]<0) img.YUV[0][pix]=0;
+			//if (img.YUV[0][pix]>255) img.YUV[0][pix]=255;
+			
+			//alisar
+			//img.YUV[0][pix]=(int)(img.YUV[0][pix]*0.8f);
+			//img.YUV[0][pix]=(int)(img.YUV[0][pix]*(1f/1.5f));
+			//img.YUV[0][pix]=(int)(img.YUV[0][pix]*(1f/4f));
+			//img.YUV[0][pix]=img.YUV[0][pix]+64;
+			//if (img.YUV[0][pix]>255) img.YUV[0][pix]=255;
+			if (y>0 && x>0 && x<511 )
+			{
+				//img.YUV[0][pix]=(img.YUV[0][pix-1]+img.YUV[0][pix-img.width])/2;
+				//img.YUV[0][pix]=img.YUV[0][pix-1];//+img.YUV[0][pix-img.width])/2;
+				//img.YUV[0][pix]=img.YUV[0][pix]- ((img.YUV[0][pix-1]+img.YUV[0][pix-img.width+1])/2);
+				int prediccion=((img.YUV[0][pix-1]+img.YUV[0][pix-img.width+1])/2);
+				int dif=img.YUV[0][pix]-prediccion;
+				if (dif>10) dif=10;
+				if (dif<-10) dif=-10;
+				
+				//img_tmp[pix]=prediccion+dif;
+				
+			}
+			//img.YUV[0][pix]=img.YUV[0][pix]/4;
+			
+		}
+	/*
+	//for (int y=0;y<img.height;y++)
+		for (int y=img.height-1;y>=0;y--)
+		for (int x=0;x<img.width;x++)
+		{
+			int pix=y*img.width+x;
+			//if (y>0 && x>0 && x<511 && y<511)
+			//img.YUV[0][pix]= img_tmp[pix]+ (img_tmp[pix-1]+img_tmp[pix+img.width+1])/2;
+			img.YUV[0][pix]= img_tmp[pix];
+		}
+	*/
+		
+		//img.down(4,4,1);
+		//img.YUVtoBMP("./img/lena_down.bmp",img.YUV[0]);
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void postfilter_002()
+{
+	System.out.println("entrada en postfilter002");
+	//int [] img_tmp=new int[img.width*img.height];
+	//if (1<2) return;
+	for (int y=img.height-1;y>=0;y--)
+		for (int x=0;x<img.width;x++)
+		{
+			int pix=y*img.width+x;
+			//if (y>0) img_tmp[pix]=(img.YUV[0][pix]- img.YUV[0][pix-img.width])/2+128;
+			//if (y>0) img.LHE_YUV[0][pix]=(img.LHE_YUV[0][pix]-128)*2+ img.LHE_YUV[0][pix-img.width];
+			//if (img.LHE_YUV[0][pix]<0) img.LHE_YUV[0][pix]=0;
+			//if (img.LHE_YUV[0][pix]>255) img.LHE_YUV[0][pix]=255;
+			//if (y>0) img.LHE_YUV[0][pix]=img.LHE_YUV[0][pix]*2;//(img.LHE_YUV[0][pix]-128+ img.LHE_YUV[0][pix-img.width])*2;
+			//img.LHE_YUV[0][pix]=(int)(img.LHE_YUV[0][pix]*1.25f);
+			//img.LHE_YUV[0][pix]=(int)(img.LHE_YUV[0][pix]*1.5f);
+			//img.LHE_YUV[0][pix]=(int)(img.LHE_YUV[0][pix]+128)/2;
+			//img.LHE_YUV[0][pix]=(int)(img.LHE_YUV[0][pix]*4f);
+			//if (x>0 && img.hops[pix]>4) img.LHE_YUV[0][pix]=(int)(img.LHE_YUV[0][pix]+img.LHE_YUV[0][pix-1])/2;
+			
+		}
+	/*
+	for (int y=0;y<img.height;y++)
+		for (int x=0;x<img.width;x++)
+		{
+			int pix=y*img.width+x;
+			img.YUV[0][pix]= img_tmp[pix];
+		}
+		*/
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 }//end class
