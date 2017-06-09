@@ -2524,8 +2524,8 @@ public void compressVideoLHEsampled()
 	       ///boolean bilineal=true;
 	       //float cf=cfini;//cfini;//cfini;//0.92f;//1.77f;
 	       
-			float pppx=2.5f;
-			float pppy=2.5f;
+			float pppx=2f;
+			float pppy=2f;
 			int orig_ancho=0;
 			int orig_alto=0;
 			
@@ -2636,6 +2636,9 @@ public void compressVideoLHEsampled()
 				fc3.loadFrame(directorio+"/"+frames[i-1]);//Esto es Y1, es decirl, el frame original anterior
 				
 				
+				lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0]);
+				
+				fc3.img.YUVtoBMP(output_directory+"/"+"_soft.bmp",lastvideoframe.LHE_YUV[0]);
 				fc3.img.computedif(fc3.img.YUV[0],lastvideoframe.LHE_YUV[0]);
 				
 				//la diferencia es dif=(A-B)/2+128

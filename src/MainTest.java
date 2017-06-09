@@ -51,8 +51,9 @@ public class MainTest {
 	System.out.println ("6) compute PSNR for a given image origin and degraded image");
 	System.out.println ("7) interpolate seams");
 	System.out.println ("8) compress LHE2");
-	System.out.println ("9) compress SIMPLE LHE");
-	System.out.println ("10) compress SIMPLE LHE sampled");
+	System.out.println ("9) compress SIMPLE LHE ( = static huffman)");
+	System.out.println ("10) compress SIMPLE LHE sampled (preLHE2)");
+	System.out.println ("11) compress SIMPLE LHE sampled (preLHE2)");
 	
 	String option =  readKeyboard();
 	System.out.println ("your option is : "+option);

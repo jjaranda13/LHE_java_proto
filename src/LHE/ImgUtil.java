@@ -4316,6 +4316,45 @@ public void setMinCountdown()
 	}
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void filtersoft(int [] pix)
+{
+	
+	//int[] tmp=new int[width*height];
+	
+	for (int y=1;y<height-1;y++)
+		for (int x=1;x<width-1;x++)
+		{
+			//int a=pix[y*width+x];
+			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x+1]+pix[(y-1)*width+x]+pix[(y+1)*width+x]+pix[y*width+x])/5;
+			
+			pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x+1]+pix[(y-1)*width+x]+pix[(y+1)*width+x]+pix[y*width+x])/5;
+			
+			//pix[y*width+x]=(pix[(y)*width+x+1]+pix[y*width+x])/2;//+pix[(y-1)*width+x+1])/2;
+			
+			//pix[y*width+x]=(pix[(y+1)*width+x-1]+pix[(y+1)*width+x+1]+pix[(y-1)*width+x-1]+pix[(y-1)*width+x+1]+pix[y*width+x])/5;
+			//pix[y*width+x]=(pix[(y+1)*width+x+1]+pix[y*width+x-1])/2;
+			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x+1]+pix[(y-1)*width+x]+pix[(y+1)*width+x]+pix[y*width+x]+pix[(y+1)*width+x-1]+pix[(y+1)*width+x+1]+pix[(y-1)*width+x-1]+pix[(y-1)*width+x+1])/9;
+			
+			//if (Math.abs(a-pix[y*width+x])>12)pix[y*width+x]=128;
+			
+			//if (pix[y*width+x]<0) pix[y*width+x]=0;
+			//if (pix[y*width+x]>255) pix[y*width+x]=255;
+			
+			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x])/2;
+			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x]+pix[(y-1)*width+x])/3;
+		}
+	/*
+	for (int y=1;y<height-1;y++)
+		for (int x=1;x<width-1;x++)
+		{
+			pix[y*width+x]=tmp[y*width+x];
+		}
+	*/
+	
+	
+}
+
+
 public void computedif(int[] orig, int[] degradada)
 {
 	
@@ -4351,7 +4390,9 @@ public void computedif(int[] orig, int[] degradada)
 		  }
 		  
 		  valordif=signo*valordif+128;
+		  
 		  dif[y*width+x]=valordif;
+		  
 		  
 	}//for
 		
@@ -4376,6 +4417,7 @@ public void sumadif(int[] A, int[] B, int[] C)
 			//esto es mejor. 3 tramos
 			//3 tramos
 			//--------
+			
 			int valordif=	B[y*width+x]-128;
 			int signo=1;
 			if (valordif<0) {signo=-1; valordif=-valordif;}
@@ -4383,7 +4425,7 @@ public void sumadif(int[] A, int[] B, int[] C)
 				
 			  if (valordif<32)//primeros 
 			  {
-				//dif[y*width+x]=valordif;
+				//nada que hacer
 			  }
 			  else if (valordif<64) // con 64 cubre hasta 32+32*2= 96
 			  {
@@ -4398,9 +4440,11 @@ public void sumadif(int[] A, int[] B, int[] C)
 			  }
 			  
 			  valordif=signo*valordif;
+			  
 			  C[y*width+x]=A[y*width+x]+valordif;
 			  
-			  
+			  //C[y*width+x]=128+valordif;
+			 
 			
 			if (C[y*width+x]<0) C[y*width+x]=0;
 			if (C[y*width+x]>255) C[y*width+x]=255;
