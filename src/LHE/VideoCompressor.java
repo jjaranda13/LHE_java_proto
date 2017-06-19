@@ -3022,7 +3022,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 fc3.img.scale(orig_ancho,orig_alto,1,1,fc3.img.LHE_YUV[0]);
 				 
 				//pasamos el filtro exp
-				// fc3.img.filterEPX(fc3.img.LHE_YUV[0],16,16);
+				fc3.img.filterEPX(fc3.img.LHE_YUV[0],16,16);
 				 
 				//salvamos el frame resultante 
 				 fc3.img.YUVtoBMP(output_directory+"/"+frames[i],fc3.img.LHE_YUV[0]);
