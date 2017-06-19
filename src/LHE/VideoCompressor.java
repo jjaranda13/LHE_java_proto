@@ -2970,7 +2970,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 					 // int alto_final=(int)(orig_alto/pppy);
 					  System.out.println(" downsampling last...");
 					  
-					  lastvideoframe.down(ancho_final,alto_final,typex,typey, lastvideoframe.LHE_YUV[0]);
+					  lastvideoframe.down(ancho_final,alto_final,1,1, lastvideoframe.LHE_YUV[0]);
 					  //lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_down.bmp",lastvideoframe.LHE_YUV[0]);
 				  }
 				  else if (pppx<pppx_prev)
@@ -2979,7 +2979,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 					  //int ancho_final=(int)(orig_ancho/pppx);
 					  //int alto_final=(int)(orig_alto/pppy);
 					  
-					  lastvideoframe.scale(ancho_final,alto_final,1,1, lastvideoframe.LHE_YUV[0]);
+					  lastvideoframe.scale(ancho_final,alto_final,0,0, lastvideoframe.LHE_YUV[0]);
 					  //lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_esc.bmp",lastvideoframe.LHE_YUV[0]);
 				  }
 				  
@@ -3019,7 +3019,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 //fc3.img.width=lastvideoframe.width;
 				 //fc3.img.height=lastvideoframe.height;
 				 
-				 fc3.img.scale(orig_ancho,orig_alto,1,1,fc3.img.LHE_YUV[0]);
+				 fc3.img.scale(orig_ancho,orig_alto,0,0,fc3.img.LHE_YUV[0]);
 				 
 				//pasamos el filtro exp
 				fc3.img.filterEPX(fc3.img.LHE_YUV[0],16,16);
