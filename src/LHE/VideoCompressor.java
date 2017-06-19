@@ -2979,7 +2979,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 					  //int ancho_final=(int)(orig_ancho/pppx);
 					  //int alto_final=(int)(orig_alto/pppy);
 					  
-					  lastvideoframe.scale(ancho_final,alto_final,0,0, lastvideoframe.LHE_YUV[0]);
+					  lastvideoframe.scale(ancho_final,alto_final,1,1, lastvideoframe.LHE_YUV[0]);
 					  //lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_esc.bmp",lastvideoframe.LHE_YUV[0]);
 				  }
 				  
