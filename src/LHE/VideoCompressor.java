@@ -2524,8 +2524,8 @@ public void compressVideoLHEsampled()
 	       ///boolean bilineal=true;
 	       //float cf=cfini;//cfini;//cfini;//0.92f;//1.77f;
 	       
-			float pppx=2f;
-			float pppy=2f;
+			float pppx=3;//2.5f;//2f;
+			float pppy=3;//2.5f;//2f;
 			int orig_ancho=0;
 			int orig_alto=0;
 			
@@ -2565,6 +2565,9 @@ public void compressVideoLHEsampled()
 			//resfc= fc.compressFrame(100);
 			//resfc= fc.compressFrame(ql+10);
 			
+			int modediferencial=1;
+			
+			//resfc=fc.compressSIMPLELHESAMPLED(pppx, 1,pppy,1,true);
 			resfc=fc.compressSIMPLELHESAMPLED(pppx, 1,pppy,1,false);
 			
 			
@@ -2608,6 +2611,10 @@ public void compressVideoLHEsampled()
 			//total_ssim+=resfp[2];//ya tenemos el primer fotograma, sumo su ssim
 			total_bpp+=resfc[1];//ya tenemos el primer fotograma, sumo su bpp
 			//int ki=0;
+			float last_bpp=0;
+			float last_bps=0;
+			
+			String frametype=new String("P");
 			
 			for (int i=1;i<frames.length;i++) {
 				System.out.println(" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
@@ -2636,21 +2643,79 @@ public void compressVideoLHEsampled()
 				fc3.loadFrame(directorio+"/"+frames[i-1]);//Esto es Y1, es decirl, el frame original anterior
 				
 				
-				lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0]);
+				double rate=(total_bpp*25)/(1000*(i+1));
+				
+				//conclusion: se puede cambar el ppp pero solo cuando haya un nuevo frame I
+				if (rate>1000){if (pppx<8){ pppx+=0.5;pppy+=0.5f; frametype=new String("I");}}//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);}}
+				//if (rate>1400){if (pppx<4){ pppx+=2*pppx;pppy+=2f*pppy; frametype=new String("I");}}//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);}}
+				else if (rate<1000){if (pppx>1){ pppx-=0.5f;pppy-=0.5f;frametype=new String("P");}}
+				//else if (rate<900){if (pppx>=2){ pppx=0.5f*pppx;pppy=0.5f*pppy;frametype=new String("P");}}
+				else frametype=new String("P");
+				
+				frametype=new String("I");
+				pppx=2;
+				pppy=2;
+				//if (last_bpp<resfc[1])
+				
+				//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);
+				
+				last_bpp=resfc[1];
+				
+				
+				//decision de subir o bajar los ppp
+				//bla bla
+				
+				// carga de la imagen original nueva
+				// down de la imagen original nueva
+				// bla bla bla
+				//
+				//si ppp nuevo> ppp anterior then down del last frame al mismo ppp
+				//si ppp nuevo< ppp anterior then scale del last frame al mismo ppp
+				
+				//en este punto tenemos nuevo frame y frame anterior a la misa resolucion
+				
+				//calculamos dif
+				
+				//comprimimos dif
+				
+				// sumamos a frame anterior
+				
+				//escalamos el resultado y lo metemos en algun sitio, manteniendo el frame anterior a su resolucion
+				
+				
+				//pasamos el filtro exp
+				
+				
 				
 				fc3.img.YUVtoBMP(output_directory+"/"+"_soft.bmp",lastvideoframe.LHE_YUV[0]);
+				if ( frametype.equals("P"))
+				{
 				fc3.img.computedif(fc3.img.YUV[0],lastvideoframe.LHE_YUV[0]);
-				
+				//fc2.img.YUV[0]=fc3.img.dif;
+				fc2.img.copy(fc3.img.dif,fc2.img.YUV[0]);
+				}
+				else 
+				{
+				fc2.img.copy(fc3.img.YUV[0],fc2.img.YUV[0]);
+				//fc2.img.YUV[0]=fc3.img.YUV[0];
+				}
 				//la diferencia es dif=(A-B)/2+128
 				
 				//en fc2 ahora lo que tengo es lo que quiero comprimir
-				fc2.img.YUV[0]=fc3.img.dif;
+				//fc2.img.YUV[0]=fc3.img.dif;
 				
 				System.out.println("compressing dy...");
 				resfc=new float[2];
-				resfc=fc2.compressSIMPLELHESAMPLED(pppx, 1,pppy,1, false);
+				
+				
+				
+				resfc=fc2.compressSIMPLELHESAMPLED(pppx, 1,pppy,1, false);//false= no filterepx
+				//fc2.img.hops tiene los hops
 				total_bpp+=resfc[1];
 				
+				
+				
+				System.out.println ("-----------------rate:"+rate+"   ppp:"+pppx);
 				
 				System.out.println(" bpp (bitsperpixel) : "+(resfc[1]/(orig_ancho*orig_alto))+" bpp");
 				System.out.println(" bit rate medio: "+(total_bpp*25)/(1000*(i+1))+" kbps");
@@ -2661,7 +2726,15 @@ public void compressVideoLHEsampled()
 				//fc2.img.YUVtoBMP(output_directory+"/d_"+frames[i],fc2.img.LHE_YUV[0]);
 				
 				//sumo frame anterior
+				if ( frametype.equals("P"))
+				{
 				fc2.img.sumadif(lastvideoframe.LHE_YUV[0],fc2.img.LHE_YUV[0],fc3.img.LHE_YUV[0]);
+				}
+				else
+				{
+					
+					fc2.img.copy(fc2.img.LHE_YUV[0],fc3.img.LHE_YUV[0]);
+				}
 				
 				//fc2.img.copy( lastvideoframe.LHE_YUV[0],fc2.img.LHE_YUV[0]);
 				
@@ -2697,5 +2770,285 @@ public void compressVideoLHEsampled()
 			System.out.println(" average kbps:"+ kbps1+" kbps");//+ " otro calculo:"+kbps2);
 			
 		}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+public void compressVideoLHEsampled_V002(double rate_target)
+		{
+	
+	       ///boolean bilineal=true;
+	       //float cf=cfini;//cfini;//cfini;//0.92f;//1.77f;
+	       
+	
+	
+			float pppx=2;//2.5f;//2f;
+			float pppy=2;//2.5f;//2f;
+			int orig_ancho=0;
+			int orig_alto=0;
+			
+			// get the directory and order the file list
+			//------------------------------------------
+			System.out.println ("Type directory name ( must be under input_video folder):");	
+			Scanner teclado = new Scanner (System.in);		
+			String directorio =  teclado.next();
+			teclado.close();
+			directorio="./input_video/"+directorio;
+			
+			String output_directory="./output_videoLHEsampled";//aqui van todos los fotogramas que se compriman
+			
+			//read directory
+			//--------------
+			File file = new File(directorio);
+			if (!file.exists()) {
+				System.out.println("El directorio no existe");
+				System.exit(0);
+			}
+			//ordena la lista de fotogramas por nombre e imprime
+			//--------------------------------------------------
+			String [] frames = orderFileList(file.list());
+			for (int i=0;i<frames.length;i++) {
+				System.out.println(frames[i]);
+			}
+			
+			//read frame 0 and compress it
+			//-------------------------------
+			LHE.FrameCompressor fc=new LHE.FrameCompressor(1);
+			fc.DEBUG=false;
+			fc.loadFrame(directorio+"/"+frames[0]);
+			float[] resfc=new float[2];
+			
+			orig_ancho=fc.img.width;
+			orig_alto=fc.img.height;
+			//resfc= fc.compressFrame(100);
+			//resfc= fc.compressFrame(ql+10);
+			
+			int modediferencial=1;
+			
+			//resfc=fc.compressSIMPLELHESAMPLED(pppx, 1,pppy,1,true);
+			
+			
+			
+			//resfc=fc.compressSIMPLELHESAMPLED(pppx, 1,pppy,1,false);
+			
+			//empezamos sin downsampling
+			resfc=fc.compressSIMPLELHE();//1, 1,1,1,false);
+			
+			System.out.println(" size: "+resfc[1]+" bits");
+			
+			
+			//play the frame
+			//--------------
+			
+			
+			// save the resulting file
+			//-------------------------
+			//fp.img.YUVtoBMP(output_directory+"/"+frames[0],fp.img.interpolated_YUV[0]);
+			
+			fc.img.YUVtoBMP(output_directory+"/"+frames[0],fc.img.LHE_YUV[0]);
+			
+			//preparamos YUV para el bucle
+			//OJO QUE SI NO PONGO ESTO NO FUNCIONA TAL COMO LO HE PROGRAMADO
+			//fp.img.YUV=fp.img.interpolated_YUV; //ahora en img.YUV se encuentra Y1'
+			
+			//set last videoframe (Y1') and auxiliar frame
+			//--------------------------------------------
+			//ImgUtil lastvideoframe;//=fc.img; //Y1'
+			ImgUtil lastvideoframe=new ImgUtil(fc.img);
+			lastvideoframe.LHE_YUV=new int[1][orig_ancho*orig_alto];
+			lastvideoframe.width=orig_ancho;
+			lastvideoframe.height=orig_alto;
+			lastvideoframe.copy(fc.img.LHE_YUV[0],lastvideoframe.LHE_YUV[0]);
+			//lastvideoframe.YUVtoBMP(output_directory+"/"+"_last.bmp",lastvideoframe.LHE_YUV[0]);
+			
+			//ImgUtil last_lowres_videoframe=fp.img;//Y1''
+			
+			
+			
+			//  bucle of frames
+			//--------------------------------------------------------------------
+			float tot_porcent=0; //not consider initial spatial compressed frame
+			//Grid grid_ant= fc.grid; //almaceno la grid del anterior fotograma
+			
+			//ponemos todo a quieto
+			//fp.img.setMinCountdown();
+			
+			double total_psnr=0;// para calcular la media
+			double total_bpp=0;
+			//double total_ssim=0;
+			
+			total_psnr+=resfc[0];//ya tenemos el primer fotograma, sumo su psnr. tambien tengo el ssim
+			//total_ssim+=resfp[2];//ya tenemos el primer fotograma, sumo su ssim
+			total_bpp+=resfc[1];//ya tenemos el primer fotograma, sumo su bpp
+			//int ki=0;
+			float last_bpp=0;
+			float last_bps=0;
+			
+			String frametype=new String("P");
+			
+			for (int i=1;i<frames.length;i++) {
+				System.out.println(" %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+				System.out.println(" next frame to compress:"+i+ " = "+frames[i]);
+				
+				//wait for hard disc
+				//------------------
+				try{
+				//	Thread.sleep(500);
+					Thread.sleep(500);
+				}catch(Exception e){}
+				System.gc();//yo que se...lo mismo mejora el rendimiento de java
+				
+
+				
+				
+				//fc3 no es un compresor, solo es para cargar el frame anterior y asi generar dy
+				//deberia usar un tipo ImgUtil
+				
+				
+				//LHE.FrameCompressor fc3=new LHE.FrameCompressor(1);
+				//fc3.loadFrame(directorio+"/"+frames[i-1]);//Esto es Y1, es decirl, el frame original anterior
+				
+				
+				double rate=(total_bpp*25)/(1000*(i+1));
+				System.out.println(" current rate:"+rate+" bps");
+				
+				//conclusion: se puede cambar el ppp pero solo cuando haya un nuevo frame I
+				//if (rate>1000){if (pppx<8){ pppx+=0.5;pppy+=0.5f; frametype=new String("I");}}//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);}}
+				//if (rate>1400){if (pppx<4){ pppx+=2*pppx;pppy+=2f*pppy; frametype=new String("I");}}//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);}}
+				//else if (rate<1000){if (pppx>1){ pppx-=0.5f;pppy-=0.5f;frametype=new String("P");}}
+				//else if (rate<900){if (pppx>=2){ pppx=0.5f*pppx;pppy=0.5f*pppy;frametype=new String("P");}}
+				//else frametype=new String("P");
+				
+				//frametype=new String("I");
+				//pppx=2;
+				//pppy=2;
+				//if (last_bpp<resfc[1])
+				
+				//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);
+				
+				last_bpp=resfc[1];
+				
+				
+				//decision de subir o bajar los ppp
+				float pppx_prev=pppx;
+				float pppy_prev=pppy;
+				if (rate>(rate_target*1.1f)){if (pppx<3){ pppx+=0.1;pppy+=0.1f; frametype=new String("P");}}
+				else if (rate<(rate_target*0.9f)){if (pppx>1){ pppx-=0.1f;pppy-=0.1f;frametype=new String("P");}}
+				
+				
+				
+				
+				// carga de la imagen original nueva
+				  //fc2 carga Y2
+				  //-------------
+				  LHE.FrameCompressor fc2=new LHE.FrameCompressor(1);//1 thread
+				  fc2.loadFrame(directorio+"/"+frames[i]); // Esto es Y2, el nuevo frame
+				  fc2.DEBUG=false;
+				  fc2.img.YUVtoBMP(output_directory+"/"+"_origBN.bmp",fc2.img.YUV[0]);
+				
+				
+				
+				
+				// down de la imagen original nueva
+				  int typex=1;//avg
+				  int typey=1;//avg
+				  int ancho_final=(int)(orig_ancho/pppx);
+				  int alto_final=(int)(orig_alto/pppy);
+				  System.out.println(" anchofinal="+ancho_final+"   altofinal="+alto_final+"   pppx="+pppx+"  pppy="+pppy);
+				  fc2.img.down(ancho_final,alto_final,typex,typey, fc2.img.YUV[0]);
+				  fc2.img.YUVtoBMP(output_directory+"/"+"_origBN_down.bmp",fc2.img.YUV[0]);
+				    
+				  
+				//si ppp nuevo> ppp anterior then down del last frame al mismo ppp
+				//si ppp nuevo< ppp anterior then scale del last frame al mismo ppp
+				  
+				  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last2.bmp",lastvideoframe.LHE_YUV[0]);
+				  //pppx y pppy son iguales
+				  if (pppx>pppx_prev)
+				  {//hay que reducir
+					  
+					 // int ancho_final=(int)(orig_ancho/pppx);
+					 // int alto_final=(int)(orig_alto/pppy);
+					  System.out.println(" downsampling last...");
+					  
+					  lastvideoframe.down(ancho_final,alto_final,typex,typey, lastvideoframe.LHE_YUV[0]);
+					  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_down.bmp",lastvideoframe.LHE_YUV[0]);
+				  }
+				  else if (pppx<pppx_prev)
+				  {//hay que escalar
+					  System.out.println(" escaling last...");
+					  //int ancho_final=(int)(orig_ancho/pppx);
+					  //int alto_final=(int)(orig_alto/pppy);
+					  
+					  lastvideoframe.scale(ancho_final,alto_final,1,1, lastvideoframe.LHE_YUV[0]);
+					  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_esc.bmp",lastvideoframe.LHE_YUV[0]);
+				  }
+				  
+				//en este punto tenemos nuevo frame y frame anterior a la misa resolucion
+				//calculamos dif
+				  
+				 fc2.img.computedif(fc2.img.YUV[0],lastvideoframe.LHE_YUV[0]); 
+				//ahora tengo dif en fc2.img.dif
+				 fc2.img.copy(fc2.img.dif,fc2.img.YUV[0]);
+				 fc2.img.YUVtoBMP(output_directory+"/"+"_dif.bmp",fc2.img.YUV[0]);
+				 
+				 //if (2>1) System.exit(0);
+				 
+				//comprimimos dif
+				 resfc=fc2.compressSIMPLELHE();//1, 1,1,1,false);
+				 total_bpp+=resfc[1];
+				 System.out.println ("-----------------rate:"+rate+"   ppp:"+pppx);
+				 System.out.println(" bpp (bitsperpixel) : "+(resfc[1]/(orig_ancho*orig_alto))+" bpp");
+				 System.out.println(" bit rate medio: "+(total_bpp*25)/(1000*(i+1))+" kbps");
+					
+				 
+				// sumamos a frame anterior
+				 fc2.img.sumadif(lastvideoframe.LHE_YUV[0],fc2.img.LHE_YUV[0],lastvideoframe.LHE_YUV[0]);
+				 
+				 
+				//escalamos el resultado y lo metemos en algun sitio, manteniendo el frame anterior a su resolucion
+				 LHE.FrameCompressor fc3=new LHE.FrameCompressor(1);
+				 fc3.img.LHE_YUV=new int[1][orig_ancho*orig_alto];
+						 //new ImgUtil();//fc.img);
+					//lastvideoframe.LHE_YUV=new int[1][orig_ancho*orig_alto];	 
+				
+				 fc3.img.width=lastvideoframe.width;
+				 fc3.img.height=lastvideoframe.height;
+				 lastvideoframe.copy(lastvideoframe.LHE_YUV[0], fc3.img.LHE_YUV[0]);
+				 fc3.img.YUVtoBMP(output_directory+"/"+"noesc.bmp",fc3.img.LHE_YUV[0]);
+				 
+				 //fc3.img.width=lastvideoframe.width;
+				 //fc3.img.height=lastvideoframe.height;
+				 
+				 fc3.img.scale(orig_ancho,orig_alto,1,1,fc3.img.LHE_YUV[0]);
+				 
+				//pasamos el filtro exp
+				// fc3.img.filterEPX(fc3.img.LHE_YUV[0],16,16);
+				 
+				//salvamos el frame resultante 
+				 fc3.img.YUVtoBMP(output_directory+"/"+frames[i],fc3.img.LHE_YUV[0]);
+				 //if (i==19) System.exit(0);
+				 
+				 double psnr=PSNR.printPSNR(output_directory+"/_origBN.bmp", output_directory+"/"+frames[i]);
+				 total_psnr+=psnr;
+				 System.out.println(" PSNR  : "+psnr);
+				 System.out.println(" PSNR medio : "+(total_psnr/(i+1)));
+						 
+				 
+				
+			}
+			
+			//System.out.println(" average porcent:"+ (100*tot_porcent/frames.length)+" %");
+			System.out.println(" average PSNR:"+ (total_psnr/frames.length)+" dB");
+			System.out.println(" average bpp:"+ (total_bpp/(orig_ancho*orig_alto*frames.length))+" bpp");
+			//float final_bpp=(float)(total_bpp/(orig_ancho*orig_alto*frames.length));
+			//(total_bpp*25)/(1000*i)
+			//double  bppavg=(total_bpp/(frames.length));
+			//double kbps2=(int)((25f*(double)orig_ancho*(double)orig_alto*bppavg)/1000f);
+			double kbps1=(int)(total_bpp*25/(1000*frames.length));
+			System.out.println(" average kbps:"+ kbps1+" kbps");//+ " otro calculo:"+kbps2);
+			
+		}
+
+
 }
 

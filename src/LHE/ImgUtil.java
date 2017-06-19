@@ -335,16 +335,16 @@ height=orig.height;
 				//  forma mas correcta 
 				//----------------------
 				xinif=xfinf;
-				int xini=(int)xinif;
+				int xini=(int)(xinif);
 				porcenti=1f-porcentf;
 				xfinf=xinif+ratio;
 				if (xfinf>width-1) xfinf=width-1;
-				int xfin=(int)xfinf;
+				int xfin=(int)(xfinf);
 				porcentf=xfinf-(int)xfin;
 				float color=pixels[y*width+xini]*porcenti;
 				for (int i=xini+1;i<xfin;i++) color+=pixels[y*width+i];
 				color+=pixels[y*width+xfin]*porcentf;
-				pixels[(y*width_down)+x]=(int)(color/(xfinf-xinif));
+				pixels[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
 				
 				
 			}
@@ -403,17 +403,17 @@ height=orig.height;
 					//------------------
 					//float yinif=(float)(y*ratio);
 					yinif=yfinf;//(float)(y*ratio);
-					int yini=(int) yinif;
+					int yini=(int) (yinif);
 					porcenti=1f-porcentf;
 					//float yfinf=yinif+ratio;
 					yfinf=yinif+ratio;
 					if (yfinf>height-1) yfinf=height-1;
-					int yfin=(int)yfinf;
+					int yfin=(int)(yfinf);
 					porcentf=yfinf-(int)yfin;
 					float color=pixels[yini*width+x]*porcenti;
 					for (int i=yini+1;i<yfin;i++)	color+=pixels[i*width+x];
 					color+=pixels[yfin*width+x]*porcentf;
-					pixels[(y*width_down)+x]=(int)(color/(yfinf-yinif));
+					pixels[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
 								
 				}
 			
@@ -479,9 +479,13 @@ height=orig.height;
 						int colorfin=pixels[pixf];
 						float alfa=(colorfin-colorini)/(ratio);
 						int k=0;
+						
 						int pixis=(int)((x)*ratio+0.5f);
+						//int pixis=(int)((x)*ratio);
 						
 						int pixfs=(int)((x+1)*ratio+0.5f);
+						//int pixfs=(int)((x+1)*ratio);
+						
 						if (pixfs>width_scaled) pixfs=width_scaled;
 						for (int i=pixis;i<pixfs;i++)
 						{
@@ -533,8 +537,12 @@ height=orig.height;
 							int k=0;
 							
 							int pixis=(int)((y+1)*ratio+0.5f);
+							//int pixis=(int)((y+1)*ratio);
 							//System.out.println("y:"+y+"  -->"+pixis+" ratio:"+ratio);
+							
 							int pixfs=(int)((y)*ratio+0.5f);
+							//int pixfs=(int)((y)*ratio);
+							
 							if (pixfs<0) pixfs=0;
 							if (pixis>height_scaled-1) pixis=height_scaled-1;
 							
@@ -554,10 +562,41 @@ height=orig.height;
 			
 		height=height_scaled;
 		}
-		//*******************************************************************************
-	
-	
-	
+	//*******************************************************************************
+	public void prefilterhist_000(int[] pixels)
+	{
+		for (int y=1; y<height-1;y++)
+		{
+			for (int x=1; x<width-1;x++)
+			{
+				//if (pixels[y*width+x]-pixels[y*width+x-1]>32)
+				//pixels[y*width+x]=(int)((pixels[y*width+x]-128)*0.25f)+128;
+				//pixels[y*width+x]=20*(int)(pixels[y*width+x]/20f);
+				//pixels[y*width+x]=(int)((pixels[y*width+x]-128)/10f)+128;
+				//pixels[y*width+x]=pixels[y*width+x]/2;
+				
+				//pixels[y*width+x]=(pixels[y*width+x]+pixels[y*width+x-1]+pixels[(y-1)*width+x+1])/3;
+				//if (pixels[y*width+x]>255) pixels[y*width+x]=255;
+				//if (pixels[y*width+x]<0) pixels[y*width+x]=0;
+			}
+		}
+	}
+	//*******************************************************************************
+		public void postfilterhist_000(int[] pixels)
+		{
+			for (int y=1; y<height-1;y++)
+			{
+				for (int x=1; x<width-1;x++)
+				{
+					//if (pixels[y*width+x]<8)
+					//pixels[y*width+x]=(int)((pixels[y*width+x]-128)*10f)+128;
+					//pixels[y*width+x]=pixels[y*width+x]/10;
+					//pixels[y*width+x]=pixels[y*width+x]*10;
+					//pixels[y*width+x]=(int)(pixels[y*width+x]*4f);
+				}
+			}
+		}
+	//*******************************************************************************
 	public void filterEPX(int[] pixels, int u1,int u2)
 	{
 		
@@ -4316,14 +4355,63 @@ public void setMinCountdown()
 	}
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-public void filtersoft(int [] pix)
+public void filtersoft(int [] pix, int []hops)
 {
-	
+	System.out.println(" filtering soft...");
 	//int[] tmp=new int[width*height];
 	
 	for (int y=1;y<height-1;y++)
 		for (int x=1;x<width-1;x++)
 		{
+			//if (1<2) continue;
+			//if (hops[y*width+x]>=1 && hops[y*width+x]<=7) {
+			//if (hops[y*width+x]<=3 || hops[y*width+x]>=5) {
+			//if (hops[y*width+x]!=4) {
+			//if (hops[y*width+x]==4) {
+			//if (hops[y*width+x]<=1 || hops[y*width+x]>=7) {
+			
+			//if (hops[y*width+x]<=2 || hops[y*width+x]>=6) {
+				//razonamiento: asi el brillo del borde se mantiene y lo que se filtra es lo de alrededor
+				
+			
+			//if (hops[y*width+x]==4 || hops[y*width+x+1]!=4) {
+			//if (y%2==0)
+			//{
+			//if (hops[y*width+x]==4 ){//|| hops[y*width+x+1]!=4) {
+				
+			
+			//if (
+			//	(hops[y*width+x]==4 && hops[y*width+x+1]>=6) ||
+			 //   (hops[y*width+x]==4 && hops[y*width+x+1]<=2)
+			  //  )
+			    //||    (hops[y*width+x]>=6) || (hops[y*width+x]<=2)) //no vale
+				
+			//con mario si filtro no consigo mejorar, sino empeorar
+			//en caso de filtrar lo que era 4, no empeora aunque tampoco mejora.
+			
+			//if (hops[y*width+x]==4) // si el anterior era un 4, era zona lisa. con mario es lo mejor
+			//if (hops[y*width+x]!=4) // si el anterior no es 4, hay que filtrarlo para eliminarlo mejor
+			//en el video ice, filtrando cuando !=4 da 2653
+			//en el video ice sin filtrar da 2826
+			//en ice filtrando cuando =4 da 2653 tambien
+				
+			//if ((hops[y*width+x]!=4) || (hops[y*width+x+1]!=4))	
+			//en ice filtrando cuando !=4 o el siguiente !=4 da 2653 tambien
+				
+			//conclusion:
+			// como no tengo la info del frame actual, no puedo filtrar segun movimiento
+			// por eso solo puedo filtrar indiscriminadamente
+			// filtrar indiscriminadamente hace daño en las partes que no se mueven
+			// el dañp puede ser superior al beneficio. eso ocurre en mario, aunque no en los demas
+				
+			{
+				//asi solo filtro los bordes
+				
+			//if (hops[y*width+x]==4 && hops[y*width+x+1]!=4) {	
+				//continue;
+			//}
+			
+			//if (y>410) continue;
 			//int a=pix[y*width+x];
 			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x+1]+pix[(y-1)*width+x]+pix[(y+1)*width+x]+pix[y*width+x])/5;
 			
@@ -4343,6 +4431,7 @@ public void filtersoft(int [] pix)
 			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x])/2;
 			//pix[y*width+x]=(pix[y*width+x-1]+pix[y*width+x]+pix[(y-1)*width+x])/3;
 		}
+		}//for
 	/*
 	for (int y=1;y<height-1;y++)
 		for (int x=1;x<width-1;x++)
@@ -4357,6 +4446,9 @@ public void filtersoft(int [] pix)
 
 public void computedif(int[] orig, int[] degradada)
 {
+	int tramo1=32;//48;//32;//32
+	int tramo2=160;//114;//160;//64
+	
 	
 	dif=new int[width*height]; //entero positivo o negativo
 	for (int y=0;y<height;y++)
@@ -4365,6 +4457,7 @@ public void computedif(int[] orig, int[] degradada)
 		
 		//esta division genera un ruido de cuantizacion visible
 		//dif[y*width+x]=(orig[y*width+x]- degradada[y*width+x])/2+128;
+		//if (1==1) continue;
 		
 		//esto es mejor. 3 tramos
 		int valordif=orig[y*width+x]- degradada[y*width+x];
@@ -4373,24 +4466,35 @@ public void computedif(int[] orig, int[] degradada)
 		if (valordif<0) {signo=-1; valordif=-valordif;}
 		//3 tramos
 		//--------
-			
-		  if (valordif<32)//primeros 
+		//if (( degradada[y*width+x]>=128 && signo==1) || 
+		//( degradada[y*width+x]<128 && signo==-1) )
+		//if ( orig[y*width+x]>128 && signo==1)
+		//if (2>3)
+		if (( degradada[y*width+x]>=128 && signo==1)) {tramo1=128;} 
+		if (( degradada[y*width+x]<=128 && signo==-1)) {tramo1=128;}
+		
+		{	
+				
+		  if (valordif<tramo1)//primeros 
 		  {
 			//dif[y*width+x]=valordif;
 		  }
-		  else if (valordif<64) // con 64 cubre hasta 32+32*2= 96
+		  else if (valordif<tramo2) // con 64 cubre hasta 32+32*2= 96
 		  {
-			  valordif=valordif-32;
-			  valordif=(32+valordif/2);
+			  valordif=valordif-tramo1;
+			  valordif=(tramo1+valordif/2);
 		  }
 		  else 
 		  {
-			  valordif=valordif-64;
-		      valordif=(32+32/2+valordif/3);
+			  valordif=valordif-tramo2;
+		      valordif=(tramo1+(tramo2-tramo1)/2+valordif/3);
 		  }
 		  
 		  valordif=signo*valordif+128;
-		  
+		  if (valordif<0) valordif=0;
+		  if (valordif>255) valordif=255;
+		}
+		
 		  dif[y*width+x]=valordif;
 		  
 		  
@@ -4405,6 +4509,11 @@ public void computedif(int[] orig, int[] degradada)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 public void sumadif(int[] A, int[] B, int[] C)
 {
+	
+	int tramo1=32;//48;//32;//32
+	int tramo2=160;//114;//160;//160
+
+	
 	//supongo que estoy sumando algo de tipo diferencia
 	for (int y=0;y<height;y++)
 		for (int x=0;x<width;x++)
@@ -4412,7 +4521,7 @@ public void sumadif(int[] A, int[] B, int[] C)
 			
 			//esto produce ruido
 			//C[y*width+x]=A[y*width+x]+2*(B[y*width+x]-128);
-			
+			//if (1==1) continue;
 			
 			//esto es mejor. 3 tramos
 			//3 tramos
@@ -4422,23 +4531,30 @@ public void sumadif(int[] A, int[] B, int[] C)
 			int signo=1;
 			if (valordif<0) {signo=-1; valordif=-valordif;}
 			
+			//if (( A[y*width+x]>=128 && signo==1) ||
+			//		( A[y*width+x]<128 && signo==-1) )
+			//if (2>3)
+			if (( B[y*width+x]>=128 && signo==1)) {tramo1=128;}
+			if (( B[y*width+x]<=128 && signo==-1)) {tramo1=128;}
+			
+			{	
 				
-			  if (valordif<32)//primeros 
+			  if (valordif<tramo1)//primeros 
 			  {
 				//nada que hacer
 			  }
-			  else if (valordif<64) // con 64 cubre hasta 32+32*2= 96
+			  else if (valordif<tramo2) // con 64 cubre hasta 32+32*2= 96
 			  {
-				  valordif=valordif-32;
-				  valordif=(32+valordif*2);
+				  valordif=valordif-tramo1;
+				  valordif=(tramo1+valordif*2);
 			  }
 			  else 
 			  {
 				  //valordif=valordif-48;
-			      valordif=valordif-64;
-				  valordif=(32+64+valordif*3);
+			      valordif=valordif-tramo2;
+				  valordif=(tramo1+(tramo2-tramo1)*2+valordif*3);
 			  }
-			  
+			}
 			  valordif=signo*valordif;
 			  
 			  C[y*width+x]=A[y*width+x]+valordif;

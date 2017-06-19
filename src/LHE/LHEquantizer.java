@@ -9813,14 +9813,17 @@ public void quantize_SIMPLELHE_001(int[] hops,int[] result_YUV)
 
 System.out.println("quantizying LHE3...");
 
-int max_hop1=10;//10;
-int min_hop1=6; 
+int max_hop1=10;//8;//10;//10;
+int min_hop1=4;//4;//6; 
 
 
 int start_hop1=(max_hop1+min_hop1)/2;
 int rmax=25;//40;
 rmax=27;//27;
 
+rmax=25;
+
+//rmax=40;
 
 int hop1=start_hop1;//max_hop1;
 int hop0=0; // predicted signal
@@ -9927,6 +9930,23 @@ for (int y=0;y<img.height;y++)  {
 			}
 		}
 		}//endif computehop
+		
+		
+		//ESTE ES UN NUEVO MODO DE COMPRESION!!!!
+		//if (hop_number>4 && hop_number<6) hop_number=4;
+		//if (hop_number<4 && hop_number>2) hop_number=4;
+		
+		/*
+		 if (hop_number>4)
+			 if (hop_number<7) hop_number=4;
+			 else hop_number=6;
+		 if (hop_number<4)
+			 if (hop_number>1) hop_number=4;
+			 else hop_number=2;
+		 */
+		// if (hop_number<3 && hop_number>-1) hop_number=2;
+		//else if (hop_number==5) hop_number=4;
+		//else if (hop_number==3) hop_number=4;
 		
 		
 		//assignment of final color value

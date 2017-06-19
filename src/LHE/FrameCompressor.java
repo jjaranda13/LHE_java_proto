@@ -209,10 +209,10 @@ float[] result=new float[2];//PSNR and bitrate
 	System.out.println(" quantizing into hops...");
 	System.out.println(" result image is ./output_img/SIMPLE_LHE_YUV.bmp");
 	
-	lhe.prefilter_002();
+	//lhe.prefilter_002();
 	lhe.quantize_SIMPLELHE_001(img.hops[0],img.LHE_YUV[0]);
 	//ready to save the result in BMP format
-	lhe.postfilter_002();
+	//lhe.postfilter_002();
 	img.YUVtoBMP("./output_img/SIMPLE_LHE_YUV.bmp",img.LHE_YUV[0]);
 	
 	//PSNR
@@ -260,10 +260,14 @@ public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int
 	int alto_orig=img.height;
 	int mode=1; 
 	
+	//img.prefilterhist_000(img.YUV[0]);
+	
 	img.down((int)(img.width/ratiox),(int)(img.height/ratioy),typex,typey, img.YUV[0]);
+	
+	//img.prefilterhist_000(img.YUV[0]);
 	//img.down((int)(img.width/2f),(int)(img.height/2f),1,1, img.YUV[0]);
-	
-	
+	//img.filtersoft(img.YUV[0],img.hops[0]);
+	//img.scale(ancho_orig,alto_orig,0,0,img.YUV[0]);
 	
 	img.YUVtoBMP("./output_img/SAMPLED_YUV.bmp",img.YUV[0]);
 	
@@ -282,7 +286,15 @@ public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int
 	
 	
 	
+	
 	lenbin=lenbin-ahorroRLC;
+	
+	/*
+	ahorroRLC=lhe.postRLC_v02(img.hops[0],img.LHE_YUV[0],0,img.width,0,img.height);
+	lenbin=lenbin-ahorroRLC;
+	System.out.println("segundo nivel RLC:"+ahorroRLC);
+	*/
+	
 	result[1]=lenbin;
 
 	
@@ -293,9 +305,11 @@ public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int
 	//-------------
     img.scale(ancho_orig,alto_orig,0,0,img.LHE_YUV[0]);
 	
+    //img.postfilterhist_000(img.LHE_YUV[0]);
     //AQUI TENGO QUE METER EL FILTRO
+    //ojo, el filtro a 1ppp produce errores, logicamente
+    //if (filter) img.filterEPX(img.LHE_YUV[0],16,16);
     
-    if (filter) img.filterEPX(img.LHE_YUV[0],16,16);
 	img.YUVtoBMP("./output_img/SIMPLE_LHESAMPLED_YUV.bmp",img.LHE_YUV[0]);
 	
 	//PSNR

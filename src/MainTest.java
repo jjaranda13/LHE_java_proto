@@ -51,9 +51,9 @@ public class MainTest {
 	System.out.println ("6) compute PSNR for a given image origin and degraded image");
 	System.out.println ("7) interpolate seams");
 	System.out.println ("8) compress LHE2");
-	System.out.println ("9) compress SIMPLE LHE ( = static huffman)");
-	System.out.println ("10) compress SIMPLE LHE sampled (preLHE2)");
-	System.out.println ("11) compress SIMPLE LHE sampled (preLHE2)");
+	System.out.println ("9) compress SIMPLE LHE ( = static huffman). fixed bit rate ");
+	System.out.println ("10) compress image SIMPLE LHE sampled (preLHE2)");
+	System.out.println ("11) compress video SIMPLE LHE sampled (preLHE2)");
 	
 	String option =  readKeyboard();
 	System.out.println ("your option is : "+option);
@@ -1049,7 +1049,13 @@ public class MainTest {
 		public void compressVideoSIMPLELHE_sampled()
 		{
 			VideoCompressor vc =new VideoCompressor();
-			vc.compressVideoLHEsampled();
+			System.out.println ("Enter target rate [default=2000]:");
+			String rate_targets =  readKeyboard();
+			if (rate_targets.equals("")) rate_targets=new String("2000");
+			
+			double rate_target=(double)Float.parseFloat(rate_targets);
+			vc.compressVideoLHEsampled_V002(rate_target);
+			
 		}
 		
 }//end class
