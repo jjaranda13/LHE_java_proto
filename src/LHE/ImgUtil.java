@@ -296,6 +296,8 @@ height=orig.height;
 		//mode=0 NN
 		//mode=1 AVG
 		
+		int[] tmp=new int[width_final*height];
+		
 		//width_down=(int)(width/ratio);
 		width_down=width_final;
 		float ratio=(float)width/(float)width_final;
@@ -306,7 +308,8 @@ height=orig.height;
 		for (int y=0;y<height;y+=1)
 			for (int x=0;x<width_down;x+=1)
 			{
-				pixels[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
+				//pixels[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
+				tmp[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
 			}
 		}//end mode NN
 		//---------------------------------------
@@ -344,12 +347,18 @@ height=orig.height;
 				float color=pixels[y*width+xini]*porcenti;
 				for (int i=xini+1;i<xfin;i++) color+=pixels[y*width+i];
 				color+=pixels[y*width+xfin]*porcentf;
-				pixels[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
+				//pixels[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
+				tmp[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
 				
 				
 			}
 		}
 		}//end mode AVG
+		
+		
+		for (int x=0;x<width_down;x++)
+			for (int y=0;y<height;y++)
+				pixels[y*width_down+x]=tmp[y*width_down+x];
 		
 		width=width_down;
 	}
@@ -357,6 +366,8 @@ height=orig.height;
 	public void downy(int height_final ,  int mode, int[] pixels)
 	{
 		
+		
+		int[] tmp=new int[width*height_final];
 		//mode=0 NN
 		//mode=1 AVG
 		height_down=height_final;
@@ -371,8 +382,8 @@ height=orig.height;
 				
 			      {
 				  	
-			      pixels[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
-			
+			      //pixels[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
+			      tmp[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
 			      }
 		}
 		else if (mode==1)
@@ -413,13 +424,18 @@ height=orig.height;
 					float color=pixels[yini*width+x]*porcenti;
 					for (int i=yini+1;i<yfin;i++)	color+=pixels[i*width+x];
 					color+=pixels[yfin*width+x]*porcentf;
-					pixels[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
+					//pixels[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
+					tmp[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
 								
 				}
 			
 			
 					}
 		}//end mode 1
+		
+		for (int x=0;x<width;x++)
+			for (int y=0;y<height_down;y++)
+				pixels[y*width+x]=tmp[y*width+x];
 		
 		
 		height=height_down;
@@ -455,25 +471,31 @@ height=orig.height;
 			width_scaled=width_final;
 			float ratio=(float)width_scaled/(float)width;
 			
+			int[] tmp=new int[width_final*height];
 			
 			System.out.println("scaling "+width+" to "+width_scaled);
 			//mode NN
 			if (mode==0)
 			{
 			for (int y=height-1;y>=0;y--)
+				//
 				for (int x=width_scaled-1;x>=0;x--)
 				{
-					pixels[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
+					//pixels[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
+					tmp[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
 				}
 			}//end mode NN
 			else if (mode==1)//bilineal
 			{
 				for (int y=height-1;y>=0;y--)
+					//for (int x=0;x<width_scaled;x++)
 					for (int x=0;x<width;x++)
 					{
 						int pixi=(y*width)+x;
 						int pixf=pixi;
-						if (x<width) pixf=(y*width)+x+1;
+						
+						//if (x<width) pixf=(y*width)+x+1;//reparado
+						if (x<width-1) pixf=(y*width)+x+1;//reparado
 						
 						int colorini=pixels[pixi];
 						int colorfin=pixels[pixf];
@@ -489,12 +511,18 @@ height=orig.height;
 						if (pixfs>width_scaled) pixfs=width_scaled;
 						for (int i=pixis;i<pixfs;i++)
 						{
-						pixels[y*width_scaled+i]=colorini+(int)(k*alfa);
+						//pixels[y*width_scaled+i]=colorini+(int)(k*alfa);
+						     tmp[y*width_scaled+i]=colorini+(int)(k*alfa);
 						k++;
 						}
 					}
 			}
-				
+			
+		
+			for (int x=0;x<width_scaled;x++)
+				for (int y=0;y<height;y++)
+					pixels[y*width_scaled+x]=tmp[y*width_scaled+x];
+			
 			
 			width=width_scaled;
 		}
@@ -507,6 +535,8 @@ height=orig.height;
 		//fusionados en un color es precisamente ese color y no una gradacion
 		height_scaled=height_final;
 		
+		int[] tmp=new int[width*height_final];
+		
 		float ratio=(float)height_scaled/(float)height;
 		
 			//mode NN
@@ -515,7 +545,8 @@ height=orig.height;
 			for (int x=width-1;x>=0;x--) 
 			 for (int y=height_scaled-1;y>=0;y--)		
 				{
-				 	pixels[y*width+x]=pixels[(int)(y/ratio)*width+x];
+				 	//pixels[y*width+x]=pixels[(int)(y/ratio)*width+x];
+				    tmp[y*width+x]=pixels[(int)(y/ratio)*width+x];
 				}
 			}
 			else if (mode==1)//bilineal
@@ -524,12 +555,15 @@ height=orig.height;
 				{
 					//int yf=height_scaled-1;
 					 for (int y=height-1;y>=0;y--)		
+				 	//for (int y=height_scaled-1;y>=0;y--)
 						{
 						 
 						    //hay que multiplicar por y+1 por que el cero tambien cuenta
 						    int pixi=(int)(y+1)*width+x;
 							int pixf=pixi;
 							if (y>0) pixf=((y)*width)+x;
+							
+							if (y==height-1) pixi=pixf;
 							
 							int colorini=pixels[pixi];
 							int colorfin=pixels[pixf];
@@ -549,7 +583,8 @@ height=orig.height;
 							
 							for (int i=pixis;i>pixfs;i--)
 							  {
-							  pixels[i*width+x]=	colorini+(int)(k*alfa);
+							  //pixels[i*width+x]=	colorini+(int)(k*alfa);
+								tmp[i*width+x]=	colorini+(int)(k*alfa);
 							  k++;
 						  	  }
 						 
@@ -557,8 +592,11 @@ height=orig.height;
 						}	
 				}
 			}
-			
-			
+		
+		
+		for (int x=0;x<width;x++)
+			for (int y=0;y<height_final;y++)
+				pixels[y*width+x]=tmp[y*width+x];
 			
 		height=height_scaled;
 		}
