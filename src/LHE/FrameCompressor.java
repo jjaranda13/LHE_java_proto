@@ -136,10 +136,12 @@ public float[] compressBasicFrame(String optionratio)
 	
 	//esta no tiene el colin
 	//lhe.quantizeOneHopPerPixel(img.hops[0],img.LHE_YUV[0]);
+	
+	
 	if (optionratio.equals("2"))
 	lhe.quantizeOneHopPerPixelBin(img.hops[0],img.LHE_YUV[0]);
 	
-	
+	lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
 	
 	
 	//lhe.quantizeOneHopPerPixel_prueba(img.hops[0],img.LHE_YUV[0]);
@@ -213,7 +215,13 @@ float[] result=new float[2];//PSNR and bitrate
 	lhe.quantize_SIMPLELHE_001(img.hops[0],img.LHE_YUV[0]);
 	//ready to save the result in BMP format
 	//lhe.postfilter_002();
+	
+	lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
+	
 	img.YUVtoBMP("./output_img/SIMPLE_LHE_YUV.bmp",img.LHE_YUV[0]);
+	
+	
+	
 	
 	//PSNR
 	double psnr=PSNR.printPSNR("./output_debug/orig_YUV_BN.bmp", "./output_img/SIMPLE_LHE_YUV.bmp");

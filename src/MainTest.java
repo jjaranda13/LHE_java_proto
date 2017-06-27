@@ -222,7 +222,7 @@ public class MainTest {
 		//System.exit(0);
 		
 		System.out.println ("choose log ratio");
-		System.out.println ("1)log ratio=2.5[default]   2) log ratio=2   ");
+		System.out.println ("1)log ratio=4.0 [default]   2) log ratio=2   ");
 		
 		String option =  readKeyboard();
 		if (option.equals("")) option="1";

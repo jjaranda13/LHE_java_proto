@@ -6596,6 +6596,62 @@ public void quantizeOneHopPerPixel_LHE2_experimento33(int[] hops,int[] result_YU
 	
 }//end function
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void filter_multualinfo(int[] hops,int[] result_YUV)
+{
+	for (int y=0;y<img.height;y++)  {
+		for (int x=1;x<img.width;x++)  {//empiezo en 1
+			
+			
+			int pix=x+y*img.width;
+			int hop_number=hops[pix];
+			int last_hop=hops[pix-1];
+			int ur_hop=4;
+			if (pix>1+ img.width) ur_hop=hops[pix+1-img.width];
+			int ul_hop=4;
+			if (pix> img.width) ul_hop=hops[pix-1-img.width];
+			//if (pix>0 && last_hop>=8 && hop_number>=7) result_YUV[pix-1]=result_YUV[pix];
+			//if (pix>0 && last_hop<=0 && hop_number<=1) result_YUV[pix-1]=result_YUV[pix];
+			//---------------- black & white borders of shapes -------------------------------------
+			// direction: any
+			
+			if ( last_hop>=8 && hop_number>=7) {
+			 if (result_YUV[pix-1]<result_YUV[pix]) result_YUV[pix-1]=result_YUV[pix];
+		      }
+			else if ( last_hop<=0 && hop_number<=1) {
+				if (result_YUV[pix-1]>result_YUV[pix]) result_YUV[pix-1]=result_YUV[pix];
+		      }
+		      
+			//---------------- diagonals-------------------------------------------------
+			
+			
+			/*
+			 if ( ur_hop>=8 && hop_number>7) {
+				result_YUV[pix+1-img.width]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1-img.width])/2;
+			}
+			 else if ( ur_hop<=0 && hop_number<1) {
+					result_YUV[pix+1-img.width]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1-img.width])/2;
+				}
+				 
+			 
+			 if ( ul_hop>=8 && hop_number>7) {
+				result_YUV[pix-1-img.width]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1-img.width])/2;
+			}
+			 else if ( ul_hop<=0 && hop_number<1) {
+					result_YUV[pix-1-img.width]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1-img.width])/2;
+				}
+			*/	 
+			
+			//---------------- soft areas ------------------------------------------------
+			if ( last_hop==4  && hop_number>=7) {
+				//result_YUV[pix-1]=(result_YUV[pix]+result_YUV[pix-1])/2;
+			}
+			
+			
+			
+		}
+	}
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 public void postfilter_LHE2(int[] hops,int[] result_YUV)
 {
 
@@ -7720,6 +7776,10 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 	int rmax=25;//40;
 	rmax=27;//27;
 	//hop1=8;
+	//rmax=25;
+	
+	rmax=40; //funciona con 40!!!! r=4 es mejor que r=2.5 porque son dos rotaciones binarias
+	
 	
 	
 	int hop1=start_hop1;//max_hop1;
@@ -7734,6 +7794,8 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 	
 	float error_center=0;
 	float error_avg=0;
+
+	int last_hop=4;
 	
 	for (int y=0;y<img.height;y++)  {
 		for (int x=0;x<img.width;x++)  {
@@ -7762,8 +7824,21 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 			hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
 				//hop0=result_YUV[pix+1-img.width];
 				//	System.out.println(" result_YUV[pix-1]:"+result_YUV[pix-1]+"  result_YUV[pix+1-img.width]: "+result_YUV[pix+1-img.width]);
-				
-				
+			
+			//NUEVA PREDICCION ADAPTATIVA
+			//if (last_small_hop==true) hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
+ 		    //else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
+ 		    
+			
+			//if  (Math.abs(result_YUV[pix-1]-result_YUV[pix+1-img.width])>128) hop0=(int) (0.97f*(float)result_YUV[pix+1-img.width]);
+			//else 
+			{
+			if (last_small_hop==true) hop0=(int)((result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3f);
+ 		    else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
+			}
+			//			hop0=(int) (0.97f*(float)result_YUV[pix-1]);
+			
+			
 			}
 			else if ((x==0) && (y>0)){
 				hop0=result_YUV[pix-img.width];
@@ -7906,9 +7981,10 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 			
 			//assignment of final color value
 			//--------------------------------
-			
 			result_YUV[pix]=pccr[hop1][hop0][rmax][hop_number];
 			
+			//result_YUV[pix]=128;
+			//System.out.print(","+result_YUV[pix]);
 			if (y>1)
 			{
 				//result_YUV[pix-img.width]=result_YUV[pix-img.width]*2;
@@ -7955,6 +8031,11 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 			//hop1=8;
 			//else if (hop_number>=7 || hop_number<=1){hop1=max_hop1;}
 
+			//correccion adaptativa. no le va bien a mickey
+			//if (pix>0 && last_hop>=8 && hop_number>=7) result_YUV[pix-1]=result_YUV[pix];
+			//if (pix>0 && last_hop<=0 && hop_number<=1) result_YUV[pix-1]=result_YUV[pix];
+			last_hop=hop_number;
+			
 			//lets go for the next pixel
 			//--------------------------
 			last_small_hop=small_hop;
@@ -8109,6 +8190,12 @@ public void quantizeDownsampledBlock_R4_improved(Block b, int[] hops,int[] resul
 			//---------------------------------------------------------------------------------
 			 if ((y>b.yini) &&(x>b.xini) && x!=b.downsampled_xfin){
 				hop0=(4f*result_YUV[pix-1]+3f*result_YUV[pix+1-img.width])/7f;	
+
+				
+				
+				//if (last_small_hop==true) hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
+	 		    //else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
+	 		    
 				
 				//System.out.println("a");
 				//hop0=(4*result_YUV[pix-1]+4*result_YUV[pix-img.width])/8;	
@@ -9822,7 +9909,11 @@ int rmax=25;//40;
 rmax=27;//27;
 
 rmax=25;
+rmax=27;
 
+
+rmax=40;//40;//con razon 4 es una doble rotacion!!! muy rapido y mejoran todas las imagenes
+//min_hop1=6;
 //rmax=40;
 
 int hop1=start_hop1;//max_hop1;
@@ -9841,9 +9932,15 @@ float error_avg=0;
 
 int  prediccion=0;//0=izq, 1 = up
 
+int last_hop=4;
+
 for (int y=0;y<img.height;y++)  {
 	for (int x=0;x<img.width;x++)  {
 
+		
+		//correccion anterior
+		
+		
 		oc=img.YUV[0][pix];
 		
 		
@@ -9855,6 +9952,13 @@ for (int y=0;y<img.height;y++)  {
 			//prediccion simple
  		    hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
 			
+ 		    
+ 		    //prediccion adaptativa
+ 		    
+ 		    if (last_small_hop==true) hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
+ 		    else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
+ 		    //else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
+ 		    
  		   // if (hop_number!=4) if (prediccion==0 )prediccion=1; else prediccion=0;
  		   // if (prediccion==0) hop0=result_YUV[pix-1];
  		   // else if (y>0) hop0=result_YUV[pix-img.width];
@@ -9965,6 +10069,49 @@ for (int y=0;y<img.height;y++)  {
 		result_YUV[pix]=val_medio;
 		hops[pix]=hop_number; 
         
+		
+		//correccion
+		/*
+		if (pix>0)
+		{
+		if (last_hop>5 && hop_number==4)  result_YUV[pix-1]=result_YUV[pix-1]-8;
+		if (last_hop<3 && hop_number==4)  result_YUV[pix-1]=result_YUV[pix-1]+8;
+		
+		if (result_YUV[pix-1]>255) result_YUV[pix-1]=255;
+		if (result_YUV[pix-1]<0) result_YUV[pix-1]=0;
+		}
+		*/
+		
+		
+		//correccion adaptativa. se podria hacer en un filtro solo en el player
+		//aunque en el encoder tambien consigue mejorar. hay que ver si mejora mas haciendolo desde encoder
+		//porque si da igual, es mejor hacerlo solo en player
+		
+		//mutual info. no le va bien a mickey
+		//if (pix>0 && last_hop>=8 && hop_number>=7) result_YUV[pix-1]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1])/2;
+		//if (pix>0 && last_hop<=0 && hop_number<=1) result_YUV[pix-1]=result_YUV[pix];//(result_YUV[pix]+result_YUV[pix-1])/2;;//result_YUV[pix];
+		
+		//mutual info. este  le va bien a mickey, a alien, a boat, a ruler, etc
+		//se puede ejecutar solo en el player para ahorrar tiempo
+		/*
+		if ( last_hop>=8 && hop_number>=7) {
+			 if (result_YUV[pix-1]<result_YUV[pix]) result_YUV[pix-1]=result_YUV[pix];
+		      }
+			else if ( last_hop<=0 && hop_number<=1) {
+				if (result_YUV[pix-1]>result_YUV[pix]) result_YUV[pix-1]=result_YUV[pix];
+		      }
+		*/
+		
+		//result_YUV[pix]=128;
+		
+		//if (pix>0 && last_hop==0 && hop_number==8) result_YUV[pix]=(int)(result_YUV[pix]*1.2f);;//-1]=(result_YUV[pix]+result_YUV[pix-1])/2;
+		//if (pix>0 && last_hop==8 && hop_number==0) result_YUV[pix]=(int)(result_YUV[pix]*0.8f);;//-1]=(result_YUV[pix]+result_YUV[pix-1])/2;
+		//if (result_YUV[pix]> 255) result_YUV[pix]=255;
+		
+		//result_YUV[pix-1]=128;
+		
+		last_hop=hop_number;
+		
 		//if (compute_hop==false && y%2==1) result_YUV[pix]=result_YUV[pix-img.width];
         //if (compute_hop==false && x%2==1) result_YUV[pix]=result_YUV[pix-1];
 		
@@ -9987,6 +10134,12 @@ for (int y=0;y<img.height;y++)  {
 		else {
 			hop1=max_hop1;
 		}
+		
+		//adaptive correction
+		//if (pix>0 && last_small_hop==false && small_hop)
+		//	result_YUV[pix-1]=(result_YUV[pix]+result_YUV[pix-1])/2;
+		
+		//result_YUV[pix]=128;
 		
 		//lets go for the next pixel
 		//--------------------------

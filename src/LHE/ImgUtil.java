@@ -4499,17 +4499,20 @@ public void computedif(int[] orig, int[] degradada)
 		
 		//esto es mejor. 3 tramos
 		int valordif=orig[y*width+x]- degradada[y*width+x];
+		
+		//if (Math.abs(valordif)<4) valordif=0;
+		
 		int signo=1;
 		
 		if (valordif<0) {signo=-1; valordif=-valordif;}
 		//3 tramos
 		//--------
-		//if (( degradada[y*width+x]>=128 && signo==1) || 
-		//( degradada[y*width+x]<128 && signo==-1) )
-		//if ( orig[y*width+x]>128 && signo==1)
-		//if (2>3)
-		if (( degradada[y*width+x]>=128 && signo==1)) {tramo1=128;} 
-		if (( degradada[y*width+x]<=128 && signo==-1)) {tramo1=128;}
+		
+		//no degradar mas de lo necesario
+		tramo1=32;
+		tramo2=160;
+		//if (( degradada[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;} 
+		//if (( degradada[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 		
 		{	
 				
@@ -4569,11 +4572,11 @@ public void sumadif(int[] A, int[] B, int[] C)
 			int signo=1;
 			if (valordif<0) {signo=-1; valordif=-valordif;}
 			
-			//if (( A[y*width+x]>=128 && signo==1) ||
-			//		( A[y*width+x]<128 && signo==-1) )
-			//if (2>3)
-			if (( B[y*width+x]>=128 && signo==1)) {tramo1=128;}
-			if (( B[y*width+x]<=128 && signo==-1)) {tramo1=128;}
+			//no degradar mas de lo necesario
+			tramo1=32;
+			tramo2=160;
+			//if (( A[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;}
+			//if (( A[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 			
 			{	
 				

@@ -2880,6 +2880,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 			total_psnr+=resfc[0];//ya tenemos el primer fotograma, sumo su psnr. tambien tengo el ssim
 			//total_ssim+=resfp[2];//ya tenemos el primer fotograma, sumo su ssim
 			total_bpp+=resfc[1];//ya tenemos el primer fotograma, sumo su bpp
+			total_bpp=0;
 			//int ki=0;
 			float last_bpp=0;
 			float last_bps=0;
@@ -2943,6 +2944,10 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				
 				if (pppx<1) pppx=1;
 				if (pppy<1) pppy=1;
+				
+				//pppx=2.5f;
+				//pppy=2.5f;
+				
 			    }
 				//if (i==1) {
 					//  pppx=pppx_prev;
@@ -3030,6 +3035,8 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 
 				//comprimimos dif
 				 resfc=fc2.compressSIMPLELHE();//1, 1,1,1,false);
+				 //fc2.lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
+				 
 				 total_bpp+=resfc[1];
 				 System.out.println ("-----------------rate:"+rate+"   ppp:"+pppx);
 				 System.out.println(" bpp (bitsperpixel) : "+(resfc[1]/(orig_ancho*orig_alto))+" bpp");
