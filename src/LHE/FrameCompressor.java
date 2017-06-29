@@ -270,7 +270,9 @@ public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int
 	
 	//img.prefilterhist_000(img.YUV[0]);
 	
-	img.down((int)(img.width/ratiox),(int)(img.height/ratioy),typex,typey, img.YUV[0]);
+	//img.down((int)(img.width/ratiox),(int)(img.height/ratioy),typex,typey, img.YUV[0]);
+	
+	img.down((int)(img.width/ratiox),(int)(img.height/ratioy),1,1, img.YUV[0]);
 	
 	//img.prefilterhist_000(img.YUV[0]);
 	//img.down((int)(img.width/2f),(int)(img.height/2f),1,1, img.YUV[0]);
@@ -309,14 +311,23 @@ public float[] compressSIMPLELHESAMPLED(float ratiox, int typex,float ratioy,int
 	//antes del escalado, de cara al video, voy a guardar la imagen "error"
 	//-------------------------------
 	
+	//informacion mutua
+	lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
+	
+	img.YUVtoBMP("./output_img/SIMPLE_LHESAMPLED_down_YUV.bmp",img.LHE_YUV[0]);
 	//escalado
 	//-------------
-    img.scale(ancho_orig,alto_orig,0,0,img.LHE_YUV[0]);
+	//escalado por vecino cercano
+    //img.scale(ancho_orig,alto_orig,0,0,img.LHE_YUV[0]);
+    
+    img.scale(ancho_orig,alto_orig,1,1,img.LHE_YUV[0]);
 	
     //img.postfilterhist_000(img.LHE_YUV[0]);
     //AQUI TENGO QUE METER EL FILTRO
     //ojo, el filtro a 1ppp produce errores, logicamente
     //if (filter) img.filterEPX(img.LHE_YUV[0],16,16);
+    
+    
     
 	img.YUVtoBMP("./output_img/SIMPLE_LHESAMPLED_YUV.bmp",img.LHE_YUV[0]);
 	

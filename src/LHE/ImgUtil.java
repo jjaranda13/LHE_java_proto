@@ -309,7 +309,7 @@ height=orig.height;
 			for (int x=0;x<width_down;x+=1)
 			{
 				//pixels[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
-				tmp[(y*width_down)+(int)(x)]=pixels[(y*width)+(int)(x*ratio)];
+				tmp[(y*width_down)+x]=pixels[(y*width)+(int)(x*ratio)];
 			}
 		}//end mode NN
 		//---------------------------------------
@@ -331,10 +331,13 @@ height=orig.height;
 				int xfin=(y*width)+(int)((x+1)*ratio);
 				int color=0;
 				for (int i=xini;i<xfin;i++)	color+=pixels[i];
-				pixels[(y*width_down)+x]=color/(xfin-xini);
+				//pixels[(y*width_down)+x]=color/(xfin-xini);
+				tmp[(y*width_down)+x]=color/(xfin-xini);
+				*/
+			
 				
-			*/
 				
+				//System.out.println("hola");
 				//  forma mas correcta 
 				//----------------------
 				xinif=xfinf;
@@ -342,6 +345,8 @@ height=orig.height;
 				porcenti=1f-porcentf;
 				xfinf=xinif+ratio;
 				if (xfinf>width-1) xfinf=width-1;
+				
+				//if (xfinf>=width) xfinf=width-0.001f;
 				int xfin=(int)(xfinf);
 				porcentf=xfinf-(int)xfin;
 				float color=pixels[y*width+xini]*porcenti;
@@ -383,7 +388,7 @@ height=orig.height;
 			      {
 				  	
 			      //pixels[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
-			      tmp[(y*width)+x]=pixels[(int)(y*ratio) *width+x];
+			      tmp[(y*width)+x]=pixels[(int)(0.5f+y*ratio) *width+x];
 			      }
 		}
 		else if (mode==1)
@@ -419,6 +424,8 @@ height=orig.height;
 					//float yfinf=yinif+ratio;
 					yfinf=yinif+ratio;
 					if (yfinf>height-1) yfinf=height-1;
+					
+					//if (yfinf>height-1) yfinf=height-1;
 					int yfin=(int)(yfinf);
 					porcentf=yfinf-(int)yfin;
 					float color=pixels[yini*width+x]*porcenti;
@@ -477,17 +484,21 @@ height=orig.height;
 			//mode NN
 			if (mode==0)
 			{
-			for (int y=height-1;y>=0;y--)
+			//for (int y=height-1;y>=0;y--)
+			for (int y=0;y <height;y++)	
 				//
-				for (int x=width_scaled-1;x>=0;x--)
+				//for (int x=width_scaled-1;x>=0;x--)
+				for (int x=0;x<width_scaled;x++)
 				{
 					//pixels[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
-					tmp[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio)];
+					//tmp[(y*width_scaled)+x]=pixels[(y*width)+(int)(x/ratio )];
+					tmp[(y*width_scaled)+x]=pixels[(y*width)+(int)(0.0f+x/ratio )];
 				}
 			}//end mode NN
 			else if (mode==1)//bilineal
 			{
-				for (int y=height-1;y>=0;y--)
+				//for (int y=height-1;y>=0;y--)
+				for (int y=0;y<height;y++)	
 					//for (int x=0;x<width_scaled;x++)
 					for (int x=0;x<width;x++)
 					{
@@ -495,17 +506,18 @@ height=orig.height;
 						int pixf=pixi;
 						
 						//if (x<width) pixf=(y*width)+x+1;//reparado
+						
 						if (x<width-1) pixf=(y*width)+x+1;//reparado
 						
 						int colorini=pixels[pixi];
 						int colorfin=pixels[pixf];
-						float alfa=(colorfin-colorini)/(ratio);
+						float alfa=(colorfin-colorini)/(ratio+1);
 						int k=0;
 						
-						int pixis=(int)((x)*ratio+0.5f);
+						int pixis=(int)((x)*ratio+0.0f);
 						//int pixis=(int)((x)*ratio);
 						
-						int pixfs=(int)((x+1)*ratio+0.5f);
+						int pixfs=(int)((x+1)*ratio+0.0f);
 						//int pixfs=(int)((x+1)*ratio);
 						
 						if (pixfs>width_scaled) pixfs=width_scaled;
@@ -542,7 +554,7 @@ height=orig.height;
 			//mode NN
 			if (mode==0)
 			{
-			for (int x=width-1;x>=0;x--) 
+			for (int x=width-1;x>=0;x--)
 			 for (int y=height_scaled-1;y>=0;y--)		
 				{
 				 	//pixels[y*width+x]=pixels[(int)(y/ratio)*width+x];
@@ -551,37 +563,51 @@ height=orig.height;
 			}
 			else if (mode==1)//bilineal
 			{
-				for (int x=width-1;x>=0;x--) 
+				//for (int x=width-1;x>=0;x--)
+				for (int x=0;x<width;x++)	
 				{
 					//int yf=height_scaled-1;
-					 for (int y=height-1;y>=0;y--)		
+					
+					
+					 //for (int y=height-1;y>=0;y--)
+				     for (int y=0;y<height;y++)
+				    	 
+				    	 
 				 	//for (int y=height_scaled-1;y>=0;y--)
 						{
 						 
 						    //hay que multiplicar por y+1 por que el cero tambien cuenta
-						    int pixi=(int)(y+1)*width+x;
-							int pixf=pixi;
-							if (y>0) pixf=((y)*width)+x;
+						    int pixi=(int)(y)*width+x;
+							//int pixf=pixi;
+							//if (y>0) 
+							int	pixf=((y+1)*width)+x;
 							
-							if (y==height-1) pixi=pixf;
+							if (y==height-1) pixf=pixi;
 							
 							int colorini=pixels[pixi];
 							int colorfin=pixels[pixf];
-							float alfa=(colorfin-colorini)/ratio;
+							float alfa=(colorfin-colorini)/(ratio+1);
 							int k=0;
 							
-							int pixis=(int)((y+1)*ratio+0.5f);
+							//int pixis=(int)((y+1)*ratio+0.5f);
+							
+							int pixis=(int)((y)*ratio+0.0f);
+							
 							//int pixis=(int)((y+1)*ratio);
 							//System.out.println("y:"+y+"  -->"+pixis+" ratio:"+ratio);
 							
-							int pixfs=(int)((y)*ratio+0.5f);
+							int pixfs=(int)((y+1)*ratio+0.0f);
 							//int pixfs=(int)((y)*ratio);
 							
-							if (pixfs<0) pixfs=0;
-							if (pixis>height_scaled-1) pixis=height_scaled-1;
+							//if (pixfs<0) pixfs=0;
+							//if (pixis>height_scaled-1) pixis=height_scaled-1;
 							
-							
-							for (int i=pixis;i>pixfs;i--)
+							//if (pixfs>height_scaled-1) pixfs=height_scaled-1;
+							if (pixfs>height_scaled) pixfs=height_scaled;
+							//if (y==height-1) pixfs=height_scaled;
+							//System.out.println("pixfs:"+pixfs);
+							//for (int i=pixis;i>pixfs;i--)
+							for (int i=pixis;i<pixfs;i++)
 							  {
 							  //pixels[i*width+x]=	colorini+(int)(k*alfa);
 								tmp[i*width+x]=	colorini+(int)(k*alfa);
@@ -4514,6 +4540,10 @@ public void computedif(int[] orig, int[] degradada)
 		//if (( degradada[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;} 
 		//if (( degradada[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 		
+		//esto es una mejora opcional--------------------------
+		//tramo1=(int)(128-(valordif/128f -1f)*96f);
+		//tramo2=(int)(255-(valordif/128f -1f)*96f);
+		
 		{	
 				
 		  if (valordif<tramo1)//primeros 
@@ -4578,6 +4608,10 @@ public void sumadif(int[] A, int[] B, int[] C)
 			//if (( A[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;}
 			//if (( A[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 			
+			//mejora opcional
+			//tramo1=(int)(128-(valordif/128f -1f)*96f);
+			//tramo2=(int)(255-(valordif/128f -1f)*96f);
+				
 			{	
 				
 			  if (valordif<tramo1)//primeros 

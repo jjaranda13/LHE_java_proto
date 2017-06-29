@@ -4013,11 +4013,6 @@ public void initPreComputations()
 			// r' values for negative hops
 			cache_ratio[1][(int)(hop1)][hop0][rmax]=(float)Math.pow(percent_range*(hop0)/(hop1), 1f/3f);
 			
-			
-			
-			
-			
-			
 			// control of limits
 			float max=(float)rmax/10f;// if rmax is 25 then max is 2.5f;
 			if (cache_ratio[0][(int)(hop1)][hop0][rmax]>max)cache_ratio[0][hop1][hop0][rmax]=max;
@@ -7836,6 +7831,8 @@ public void quantizeOneHopPerPixel_improved(int[] hops,int[] result_YUV)
 			if (last_small_hop==true) hop0=(int)((result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3f);
  		    else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
 			}
+			
+			//hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
 			//			hop0=(int) (0.97f*(float)result_YUV[pix-1]);
 			
 			
@@ -9911,10 +9908,13 @@ rmax=27;//27;
 rmax=25;
 rmax=27;
 
+boolean potencia2=false;
 
 rmax=40;//40;//con razon 4 es una doble rotacion!!! muy rapido y mejoran todas las imagenes
 //min_hop1=6;
 //rmax=40;
+
+if (potencia2) rmax=20;
 
 int hop1=start_hop1;//max_hop1;
 int hop0=0; // predicted signal
@@ -9957,6 +9957,8 @@ for (int y=0;y<img.height;y++)  {
  		    
  		    if (last_small_hop==true) hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
  		    else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
+ 		    
+ 		   //hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width])/2;
  		    //else hop0=(result_YUV[pix-1]+result_YUV[pix+1-img.width]+result_YUV[pix-img.width])/3;
  		    
  		   // if (hop_number!=4) if (prediccion==0 )prediccion=1; else prediccion=0;
@@ -10002,17 +10004,36 @@ for (int y=0;y<img.height;y++)  {
 		//if (x%2==1 && hops[pix-1]<=maxh && hops[pix-1]>=minh) {compute_hop=false;hop_number=4;}
 		//if (y>0 && hops[pix-img.width]<=maxh && hops[pix-img.width]>=minh) {compute_hop=false;hop_number=4;}
 		
+		int cosa=hop0;
+		hop_number=4;
+		emin=oc-hop0;//pccr[hop1][hop0][rmax][hop_number];
+		if (emin<0) emin=-emin;
+		
+		int valor_final=hop0;
+		
+		if (emin>=4)
 		if (compute_hop)
 		{
 				
 		if (oc-hop0>=0) 
 		{
-			for (int j=4;j<=8;j++) {
+			for (int j=5;j<=8;j++) {
 			//for (int j=4;j<=5;j++) {
 				e2=oc-pccr[hop1][hop0][rmax][j];
+				
+				if (potencia2)
+				{	
+				int salto=(int)(hop1*Math.pow(rmax/10, (j-4)));
+				if (hop0+salto >255) break;
+				cosa=hop0+salto;
+				e2=oc-cosa;
+				}
+				else cosa=pccr[hop1][hop0][rmax][j];
+				
 				if (e2<0) e2=-e2;
 				if (e2<emin) {hop_number=j;emin=e2;
 				              //if (e2<min_hop1) break;
+				               valor_final=cosa;
 								if (e2<4) break;
 				              }
 				else break;
@@ -10022,14 +10043,25 @@ for (int y=0;y<img.height;y++)  {
 		//-------------------------
 		else 
 		{
-			for (int j=4;j>=0;j--) {
+			for (int j=3;j>=0;j--) {
 			//for (int j=4;j>=3;j--) {
 				e2=pccr[hop1][hop0][rmax][j]-oc;
+				
+				if (potencia2)
+				{
+				int salto=(int)(hop1*Math.pow(rmax/10, (4-j)));
+				if (hop0-salto<0) break;
+				cosa=hop0-salto;
+				e2=cosa-oc;
+				}
+				else cosa=pccr[hop1][hop0][rmax][j];
+						
 				if (e2<0) e2=-e2;
 				if (e2<emin) {hop_number=j;emin=e2;
 				            //if (e2<min_hop1) break;
+							valor_final=cosa;
 							if (e2<4) break;
-				            }
+							}
 				else break;
 			}
 		}
@@ -10057,6 +10089,10 @@ for (int y=0;y<img.height;y++)  {
 		//--------------------------------
 		
 		int val_medio=pccr[hop1][hop0][rmax][hop_number];
+		
+		val_medio=valor_final;
+		//int 
+		//val_medio=cosa;
 		/*
 		if (hop_number>5)
 		{	val_medio=(pccr[hop1][hop0][rmax][hop_number]+pccr[hop1][hop0][rmax][hop_number-1])/2;}

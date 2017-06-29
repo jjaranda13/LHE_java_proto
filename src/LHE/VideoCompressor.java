@@ -2945,8 +2945,8 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				if (pppx<1) pppx=1;
 				if (pppy<1) pppy=1;
 				
-				//pppx=2.5f;
-				//pppy=2.5f;
+				pppx=2f;
+				pppy=2f;
 				
 			    }
 				//if (i==1) {
@@ -2970,7 +2970,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				
 				// down de la imagen original nueva
 				  int typex=1;//avg
-				  int typey=1;//avg
+				  int typey=0;//avg
 				  int ancho_final=(int)(orig_ancho/pppx);
 				  int alto_final=(int)(orig_alto/pppy);
 				  System.out.println(" anchofinal="+ancho_final+"   altofinal="+alto_final+"   pppx="+pppx+"  pppy="+pppy);
@@ -2986,7 +2986,9 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				  
 				  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last2.bmp",lastvideoframe.LHE_YUV[0]); 
 				  
-				 lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0],lastvideoframe.LHE_YUV[0]);
+				
+				  
+				  //lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0],lastvideoframe.LHE_YUV[0]);
 				  
 				 //lastvideoframe.YUVtoBMP(output_directory+"/"+"_last2.bmp",lastvideoframe.LHE_YUV[0]);
 				  //pppx y pppy son iguales
