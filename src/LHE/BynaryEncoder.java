@@ -2491,19 +2491,37 @@ public int hopsToBits_simple(int[] hops, int xini, int yini, int xfin, int yfin)
 	
 	
 	//otra opcion mejor para rlc?
-	
-	bits_len[0]=8;//000000000    
-	bits_len[1]=7;//0000001
-	bits_len[2]=5;//00001
+	/*
+	bits_len[0]=6;//000000000    
+	bits_len[1]=4;//0000001
+	bits_len[2]=3;//00001
 	bits_len[3]=3;//00001
-	bits_len[4]=1;//1
+	bits_len[4]=2;//1
 	bits_len[5]=2;//01
-	bits_len[6]=4;//000
-	bits_len[7]=6;//0001
-	bits_len[8]=8;//00000001
-	
-	
-	
+	bits_len[6]=3;//000
+	bits_len[7]=5;//0001
+	bits_len[8]=6;//00000001
+	*/
+	/*
+	  code:1 =10
+			 code:1 len:2
+			code:2 =111
+			 code:2 len:3
+			code:3 =00
+			 code:3 len:2
+			code:4 =011
+			 code:4 len:3
+			code:5 =010
+			 code:5 len:3
+			code:6 =1101
+			 code:6 len:4
+			code:7 =11001
+			 code:7 len:5
+			code:8 =110000
+			 code:8 len:6
+			code:9 =110001
+			 code:9 len:6
+	*/
 	//bucle for scan hops
 	//----------------------
 	for (int y=yini; y<=yfin;y++)

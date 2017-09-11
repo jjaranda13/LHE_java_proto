@@ -220,7 +220,7 @@ float[] result=new float[2];//PSNR and bitrate
 	
 	img.YUVtoBMP("./output_img/SIMPLE_LHE_YUV.bmp",img.LHE_YUV[0]);
 	
-	
+	img.saveHopsToTxt("./output_debug/hops_unsigned.txt",false);
 	
 	
 	//PSNR

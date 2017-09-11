@@ -300,7 +300,7 @@ height=orig.height;
 		
 		//width_down=(int)(width/ratio);
 		width_down=width_final;
-		float ratio=(float)width/(float)width_final;
+		float ratio=(float)(width)/(float)(width_final);
 		System.out.println(" ratio x="+ratio+ " widthdown="+width_down);
 		//mode NN
 		if (mode==0)
@@ -344,7 +344,10 @@ height=orig.height;
 				int xini=(int)(xinif);
 				porcenti=1f-porcentf;
 				xfinf=xinif+ratio;
-				if (xfinf>width-1) xfinf=width-1;
+				//if (xfinf>width-1) xfinf=width-1;
+				
+				if (xfinf>=width) xfinf=width-0.01f;
+				if (x==width_down-1) {xfinf=width-0.01f;}
 				
 				//if (xfinf>=width) xfinf=width-0.001f;
 				int xfin=(int)(xfinf);
@@ -355,6 +358,8 @@ height=orig.height;
 				//pixels[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
 				tmp[(y*width_down)+x]=(int)(0.5f+color/(xfinf-xinif));
 				
+				//correccion?
+				//if (xfinf==width-1) tmp[(y*width_down)+width-1]=pixels[y*width+xfin];
 				
 			}
 		}
@@ -376,7 +381,7 @@ height=orig.height;
 		//mode=0 NN
 		//mode=1 AVG
 		height_down=height_final;
-		float ratio=(float)height/(float)height_final;
+		float ratio=(float)(height)/(float)(height_final);
 		System.out.println(" ratio y="+ratio+ " heightdown="+height_down);
 		//mode NN
 		if (mode==0)
@@ -423,7 +428,11 @@ height=orig.height;
 					porcenti=1f-porcentf;
 					//float yfinf=yinif+ratio;
 					yfinf=yinif+ratio;
-					if (yfinf>height-1) yfinf=height-1;
+					//if (yfinf>height-1) {yfinf=height-1;}
+					//if (yfinf>=height) {yfinf=height-0.01f;}
+					
+					if (y==height_down-1) {yfinf=height-0.01f;}
+					
 					
 					//if (yfinf>height-1) yfinf=height-1;
 					int yfin=(int)(yfinf);
@@ -433,7 +442,13 @@ height=orig.height;
 					color+=pixels[yfin*width+x]*porcentf;
 					//pixels[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
 					tmp[(y*width_down)+x]=(int)(0.5f+color/(yfinf-yinif));
-								
+					
+					//if (tmp[(y*width_down)+x]<0) tmp[(y*width_down)+x]=0;
+					//if (tmp[(y*width_down)+x]>255) tmp[(y*width_down)+x]=255;
+					
+					//correccion?
+					//if (yfinf==height-1) tmp[(y*width_down)+width-1]=pixels[y*width+xfin];
+					
 				}
 			
 			
@@ -4510,9 +4525,11 @@ public void filtersoft(int [] pix, int []hops)
 
 public void computedif(int[] orig, int[] degradada)
 {
-	int tramo1=32;//48;//32;//32
-	int tramo2=160;//114;//160;//64
+	int tramo1_ini=24;//24;//32;//32;//32;//48;//32;//32
+	int tramo2_ini=186;//24;//186;//162;//160;//114;//160;//160
 	
+	int tramo1=tramo1_ini;
+	int tramo2=tramo2_ini;
 	
 	dif=new int[width*height]; //entero positivo o negativo
 	for (int y=0;y<height;y++)
@@ -4526,7 +4543,16 @@ public void computedif(int[] orig, int[] degradada)
 		//esto es mejor. 3 tramos
 		int valordif=orig[y*width+x]- degradada[y*width+x];
 		
-		//if (Math.abs(valordif)<4) valordif=0;
+		
+		
+		/*
+		int umbral_mov=10;
+		if (Math.abs(valordif)>umbral_mov &&  y>0 && y<height-1 && x>0 && x<width-1) 
+		{
+			degradada[y*width+x]=(degradada[y*width+x]+degradada[y*width+x-1]+degradada[y*width+x+1])/3;//+degradada[(y-1)*width+x]+degradada[(y+1)*width+x])/5;
+			valordif=orig[y*width+x]- degradada[y*width+x];
+		}
+		*/
 		
 		int signo=1;
 		
@@ -4535,8 +4561,12 @@ public void computedif(int[] orig, int[] degradada)
 		//--------
 		
 		//no degradar mas de lo necesario
-		tramo1=32;
-		tramo2=160;
+		tramo1=tramo1_ini;//32;
+		tramo2=tramo2_ini;//160;
+		
+		
+				
+		
 		//if (( degradada[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;} 
 		//if (( degradada[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 		
@@ -4581,8 +4611,11 @@ public void computedif(int[] orig, int[] degradada)
 public void sumadif(int[] A, int[] B, int[] C)
 {
 	
-	int tramo1=32;//48;//32;//32
-	int tramo2=160;//114;//160;//160
+	int tramo1_ini=24;//24;//32;//32;//32;//48;//32;//32
+	int tramo2_ini=186;//186;//186;//162;//160;//114;//160;//160
+	
+	int tramo1=tramo1_ini;
+	int tramo2=tramo2_ini;
 
 	
 	//supongo que estoy sumando algo de tipo diferencia
@@ -4603,8 +4636,8 @@ public void sumadif(int[] A, int[] B, int[] C)
 			if (valordif<0) {signo=-1; valordif=-valordif;}
 			
 			//no degradar mas de lo necesario
-			tramo1=32;
-			tramo2=160;
+			tramo1=tramo1_ini;//32;
+			tramo2=tramo2_ini;//160;
 			//if (( A[y*width+x]>=128 && signo==1)) {tramo1=128;tramo2=255;}
 			//if (( A[y*width+x]<=128 && signo==-1)) {tramo1=128;tramo2=255;}
 			

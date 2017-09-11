@@ -45,6 +45,11 @@ public class PRblock {
 	//PR values non quantized
 	public float[] HistnqPRx;
 	public float[] HistnqPRy;
+	
+	
+	//PR computation mode values [HOPS | LUM]
+	public static String PR_MODE="HOPS"; 
+	
 	//******************************************************************
 	public void quantizeGeometricalPR()
 	{
@@ -195,9 +200,17 @@ public class PRblock {
 			else PRy=1f;//(1f+level2)/2f;
 
 		}
-	//******************************************************************	
+	//******************************************************************
+		
+		//ESTA ES LA FUNCION CORRECTA 6/9/2017
 	public void computePRmetrics()
+   //public void computePRmetrics_OK()
 	{
+		
+		if (PR_MODE.equals("LUM")) {computePRmetrics_LUM();
+		//System.out.println ("Hola");
+		return;}
+		
 		//PR computation normalized to 0..1
 
 		//Grid class creates a grid of Blocks and PRBlocks.
@@ -214,7 +227,8 @@ public class PRblock {
 
 		float Cx=0;
 		float Cy=0; 
-
+        
+		//if (2>1) { System.out.println("hola");System.exit(0);}
 
 		for (int y=yini;y<=yfin;y++)
 		{
@@ -318,6 +332,300 @@ public class PRblock {
 		//System.out.println("numerador:"+PRx+" denominador:"+Cx*4);
 		if (PRx>0) PRx=PRx/(Cx*4);
 		if (PRy>0) PRy=PRy/(Cy*4);
+
+		//if (PRx>0) PRx=PRx/((xfin-xini)*(yfin-yini)*4);
+		//if (PRy>0) PRy=PRy/((xfin-xini)*(yfin-yini)*4);
+		
+		//if (PRx<0.01f || PRy<0.01f) System.out.println("NOTHING");
+		if (PRx>1 || PRy>1) {
+			System.out.println(" failure. imposible PR value > 1");
+			System.exit(0);
+		}
+
+		//if (PRx==0.0) {
+			//System.out.println("ha salido cero");
+			//System.exit(0);
+		//}
+		//else System.out.println("no es cero");
+		
+    	//System.out.println("PRx:"+PRx+"  , PRy:"+PRy+"   xini:"+xini+"  xfin:"+xfin+"  yini:"+yini+"  yfin:"+yfin);
+		//System.out.println((int)(PRx*100));
+		//System.out.println((int)(PRy*100));
+		float umbral=10.5f;//0.5f; //LATER
+		if (PRx>umbral) PRx=0.5f;//1;
+		if (PRy>umbral) PRy=0.5f;//1;
+		
+		//PRx=1-PRx;
+		//PRy=1-PRy;
+		
+		//nqPRx=PRx;
+		//nqPRy=PRy;
+	}
+//**********************************************************************************
+public int log2(int dato)
+{
+	//if (dato/255 ==1) return 4;
+	int signo=1;
+	
+	if (dato<0) {dato =-dato; signo=-1;}
+	dato=dato+4;
+	if (dato/64 >=1) return signo*4;
+	if (dato/32 ==1) return signo*3;
+	if (dato/16 ==1) return signo*2;
+	if (dato/8 ==1) return signo*1;
+	return 0;
+	
+}
+ //******************************************************************
+	
+	//experimento con luminancias
+	public void computePRmetrics_LUM()
+	//public void computePRmetrics()
+	{
+		//PR computation normalized to 0..1
+
+		//Grid class creates a grid of Blocks and PRBlocks.
+		//PRBlocks coordinates are in 0..width and 0..height
+		int last_hop=0;
+		int hop=0;
+		
+		//------------nuevo-----
+		int lum_dif=0;
+		int last_lum_dif=0;//0;
+		
+	    boolean lum_sign=true;
+	    boolean last_lum_sign=true;
+		
+	    int divisor=8;
+	    //int divisor2=4;
+	    //int divisor_ini=4;
+	    //int divisor_min=4;
+	    int max=4;
+		//-----------------
+		
+		boolean hop_sign=true;
+		boolean last_hop_sign=true;
+		PRx=0;
+		PRy=0;
+
+		//float tune=1.0f;
+		//PRx
+
+		float Cx=0;
+		float Cy=0; 
+        
+		//if (2>1) { System.out.println("hola");System.exit(0);}
+
+		for (int y=yini;y<=yfin;y++)
+		{
+			if (y>0)
+			{
+				//last_hop=img.hops[0][(y-1)*img.width+xini]-4;
+				
+				//lum_dif=0;//(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini])/divisor;
+				
+				int dif=(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini]);
+				
+				last_lum_dif=dif/divisor;
+				//last_lum_dif=log2(dif);
+				//if (last_lum_dif>1) last_lum_dif=last_lum_dif/2;
+				
+				
+				//if (last_lum_dif==4) last_lum_dif=3;
+				//if (last_lum_dif==-4) last_lum_dif=-3;
+				
+				if (last_lum_dif>max) last_lum_dif=max;
+				if (last_lum_dif<-max) last_lum_dif=-max;
+				//last_hop_sign=(last_hop>=0); //NUEVO 19/3/2015
+				last_lum_sign=(last_lum_dif>=0);
+				//last_lum_dif=0;
+				
+				
+			}
+			//horizontal scanlines
+			//for (int x=xini;x<=xfin;x++)
+			for (int x=xini;x<=xfin;x++) //para poder hacer lum_dif
+			{
+				
+				int dif=0;
+				
+				if (x>0) dif=(img.YUV[0][(y)*img.width+x]-img.YUV[0][(y)*img.width+x-1]);
+					
+				lum_dif=dif/divisor;
+				
+				//lum_dif=log2(dif);
+				
+				//if (lum_dif==4) lum_dif=3;
+				//if (lum_dif==-4) lum_dif=-3;
+				
+				//if (lum_dif>1) lum_dif=lum_dif/2;
+				
+				if (lum_dif>max) lum_dif=max;
+				if (lum_dif<-max) lum_dif=-max;
+				//hop=img.hops[0][y*img.width+x]-4;//[0] is lumminance (Y)
+				
+				//int k= lum_dif; if (k<0) k=-k; divisor=divisor_ini+k;
+				
+				
+				//System.out.println("lum_dif="+lum_dif);
+				
+				//if (lum_dif==0 && x>0) lum_dif=(img.YUV[0][(y)*img.width+x]-img.YUV[0][(y)*img.width+x-1])/divisor2;
+				
+			//	if (lum_dif<=1) {divisor--; if (divisor<divisor_min) divisor=divisor_min;}
+			//	else divisor=10;
+				
+				if (lum_dif==0) continue; 
+				
+				// hop value: -4....0....+4
+				//if (hop==0) continue; //h0 no sign
+				
+				//hop_sign=(hop>=0);//NUEVO 19/3/2015 
+				lum_sign=(lum_dif>=0);
+				
+
+				//if ((hop_sign!=last_hop_sign && last_hop!=0) || hop==4 || hop==-4) {//NUEVO 19/3/2015 
+				
+				if ((lum_sign!=last_lum_sign && last_lum_dif!=0) || lum_dif==max || lum_dif==-max ) {//NUEVO 19/3/2015 
+							
+					
+					
+				//if ((hop_sign!=last_hop_sign && last_hop!=0) || hop>=3 || hop<=-3) {//NUEVO 19/3/2015 
+						
+					//int weight=hop;
+					
+					int weight=lum_dif;
+					
+					if (weight<0)weight=-weight;
+					
+					PRx+=weight;
+					//System.out.println ("hop:"+hop+"  lasth:"+last_hop+ "x:"+x);
+					Cx++;
+
+				}
+				//System.out.println("scan");
+				//last_hop=hop;
+				//last_hop_sign=hop_sign;
+				
+				
+				last_lum_dif=lum_dif;
+				last_lum_sign=lum_sign;
+				
+			}
+			//System.out.println("scan");
+		}
+
+		//hop=0;
+		//hop_sign=true;
+		//last_hop=0;
+		//last_hop_sign=true;
+
+		
+		lum_sign=true;
+		
+		lum_dif=0;
+		last_lum_sign=true;
+		last_lum_dif=0;//0;
+		
+		//System.out.println(" processing vscanlines  img.width"+img.width+"   xini:"+xini+"   xfin:"+xfin+"  yini:"+yini+"    yfin:"+yfin);
+		for (int x=xini;x<=xfin;x++)
+		{
+			//System.out.println("x:"+x);
+			if (x>0)
+			{
+			    //left pixel
+				//last_hop=img.hops[0][(yini)*img.width+x-1]-4;
+				
+				//lum_dif=0;
+				
+				
+				int dif=(img.YUV[0][(yini)*img.width+x]-img.YUV[0][(yini)*img.width+x-1]);
+				
+				last_lum_dif=dif/divisor;
+				
+				//last_lum_dif=log2(dif);
+				//if (last_lum_dif>1) last_lum_dif=last_lum_dif/2;
+				//if (last_lum_dif==4) last_lum_dif=3;
+				//if (last_lum_dif==-4) last_lum_dif=-3;
+				
+				if (last_lum_dif>max) last_lum_dif=max;
+				if (last_lum_dif<-max) last_lum_dif=-max;
+				
+				//last_hop_sign=(last_hop>=0); //NUEVO 19/3/2015
+				last_lum_sign=(last_lum_dif>=0);
+				
+				
+				//last_hop_sign=(last_hop>0);
+				//last_hop_sign=(last_hop>=0);//NUEVO 19/3/2015
+				//last_lum_sign=true;
+				//last_lum_dif=0;
+				
+			}
+			//vertical scanlines
+			//for (int y=yini;y<=yfin;y++)
+			for (int y=yini;y<=yfin;y++)//para poder calcular dif
+			{
+
+				//hop=img.hops[0][y*img.width+x]-4;//[0] is lumminance (Y)
+				//if (hop==0) continue; //h0 no sign
+				
+				int dif=0;
+				if (y>0)dif=(img.YUV[0][y*img.width+x]-img.YUV[0][(y-1)*img.width+x]);
+	            lum_dif=dif/divisor;
+	            
+	            //lum_dif=log2(dif);
+	            
+				//if (lum_dif==4) lum_dif=3;
+				//if (lum_dif==-4) lum_dif=-3;
+	           
+				
+				//if (lum_dif>1) lum_dif=lum_dif/2;
+				
+				if (lum_dif>max) lum_dif=max;
+				if (lum_dif<-max) lum_dif=-max;
+				//System.out.println("lum_dif="+lum_dif+"    div:"+divisor);
+				
+				//int k= lum_dif; if (k<0) k=-k; divisor=divisor_ini+k;
+				//if (lum_dif==0 && y>0) lum_dif=(img.YUV[0][y*img.width+x]-img.YUV[0][(y-1)*img.width+x])/divisor2;
+				
+				
+				//if (lum_dif<=1) {divisor--; if (divisor<divisor_min) divisor=divisor_min;}
+				//else divisor=10;
+				
+				 if (lum_dif==0) continue; 
+				
+				//hop_sign=(hop>=0);//NUEVO 19/3/2015
+				lum_sign=(lum_dif>=0);
+				
+				
+				//if ((hop_sign!=last_hop_sign && last_hop!=0) || hop==4 || hop==-4){
+				
+					
+				
+				if ((lum_sign!=last_lum_sign && last_lum_dif!=0) || lum_dif==max || lum_dif==-max ) {//NUEVO 19/3/2015 
+										
+					
+					//int weight=hop;
+					
+					int weight=lum_dif;
+					if (weight<0)weight=-weight;
+					
+					PRy+=weight;
+					//System.out.println ("hop:"+hop+"  lasth:"+last_hop);
+					Cy++;
+				}
+				//last_hop=hop;
+				
+				last_lum_dif=lum_dif;
+				
+				//last_hop_sign=hop_sign;
+				last_lum_sign=lum_sign;
+			}
+
+		}
+
+		//System.out.println("numerador:"+PRx+" denominador:"+Cx*4);
+		if (PRx>0) PRx=PRx/(Cx*max);
+		if (PRy>0) PRy=PRy/(Cy*max);
 
 		//if (PRx>0) PRx=PRx/((xfin-xini)*(yfin-yini)*4);
 		//if (PRy>0) PRy=PRy/((xfin-xini)*(yfin-yini)*4);

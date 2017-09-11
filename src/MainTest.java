@@ -324,12 +324,20 @@ public class MainTest {
 		String interpol = readKeyboard();
 		if (interpol.equals("")) interpol=new String("3");
 		
+		 //set PR_mode (based on luminance or based on hops)
+		System.out.println ("Type PR MODE 1) HOPS, 2) LUM [default=HOPS]:");	
+		String PR_mode =  readKeyboard();
+		if (PR_mode.equals("") || PR_mode.equals("1")) PR_mode=new String("HOPS");
+		else  PR_mode=new String("LUM");
+		PRblock.PR_MODE=new String(PR_mode);//es un valor estatico de clase
 		
 		
 		FrameCompressor fc=new LHE.FrameCompressor(1);
 		fc.DEBUG=debug;
 		
 		fc.downmode=downmode;
+		
+		
 		
 		
 		if (ED==false)fc.MODE=new String("HOMO");
@@ -437,7 +445,7 @@ public class MainTest {
 	 * result[2]=resfp[0];//percent
 	 * result[3]=resfp[1];//psnr
 	 */
-	public  float[] compressImage(boolean LHE, boolean ED,int type, float value, String filename, float ql_start, String interpol)
+	public  float[] compressImage(boolean LHE, boolean ED,int type, float value, String filename, float ql_start, String interpol, String PR_mode)
 	{
 		boolean debug=false;
 		int percent=0;
@@ -620,7 +628,13 @@ public class MainTest {
 			//System.out.println(ficherosEnDirectorio[i]);
 		}
 
-
+        //set PR_mode (based on luminance or based on hops)
+		System.out.println ("Type PR MODE 1) HOPS, 2) LUM [default=HOPS]:");	
+		String PR_mode =  teclado.next();
+		if (PR_mode.equals("") || PR_mode.equals("1")) PR_mode=new String("HOPS");
+		else  PR_mode=new String("LUM");
+		
+		
 		//ImgUtil img=new ImgUtil();
 		
 		//for each file
@@ -637,7 +651,7 @@ public class MainTest {
 			for (float percent=5;percent<100;percent+=5)
 			{
 				
-				float[] res=compressImage(LHE,ED,2,percent,directorio+"/"+ficherosEnDirectorio[i],ql_start, interpol);
+				float[] res=compressImage(LHE,ED,2,percent,directorio+"/"+ficherosEnDirectorio[i],ql_start, interpol,PR_mode);
 				String psnrs=new String(""+res[3]).replace(".",",");
 				String ssim=new String(""+res[4]).replace(".",",");
 				ql_start=res[0];
@@ -732,7 +746,12 @@ public class MainTest {
 				//System.out.println(ficherosEnDirectorio[i]);
 			}
 
-
+			 //set PR_mode (based on luminance or based on hops)
+			System.out.println ("Type PR MODE 1) HOPS, 2) LUM [default=HOPS]:");	
+			String PR_mode =  teclado.next();
+			if (PR_mode.equals("") || PR_mode.equals("1")) PR_mode=new String("HOPS");
+			else  PR_mode=new String("LUM");
+			
 			//ImgUtil img=new ImgUtil();
 			
 			//for each file
@@ -769,7 +788,7 @@ public class MainTest {
 				{
 					float bpp2=table_bpp[bpp_i];
 					
-					float[] res=compressImage(LHE,ED,3,bpp2,directorio+"/"+ficherosEnDirectorio[i],ql_start, interpol);
+					float[] res=compressImage(LHE,ED,3,bpp2,directorio+"/"+ficherosEnDirectorio[i],ql_start, interpol, PR_mode);
 					String psnrs=new String(""+res[3]).replace(".",",");
 					String ssim=new String(""+res[4]).replace(".",",");
 					ql_start=res[0];

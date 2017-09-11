@@ -2928,14 +2928,16 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				
 				//lastvideoframe.filtersoft(lastvideoframe.LHE_YUV[0], fc2.img.hops[0]);
 				
-				last_bpp=resfc[1];
+				//last_bpp=resfc[1];
 				
 				
 				//decision de subir o bajar los ppp
 				float pppx_prev=pppx;
-				float pppy_prev=pppy;
+				//float pppy_prev=pppy;
 				
 				frametype=new String("P");
+				
+				
 				if (i>=2)
 				{	
 				 if (rate>(rate_target*1.1f)){if (pppx<4){ pppx+=0.1;pppy+=0.1f; }}
@@ -2949,6 +2951,32 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				pppy=2f;
 				
 			    }
+				
+				/*
+				float current_bpp=resfc[1]/(orig_ancho*orig_alto);
+				
+				if (current_bpp<last_bpp)
+				{
+					if (pppx>=1.1)
+					{
+						pppx=pppx-0.1f;
+						//pppy=pppy-0.1f;
+					}	
+				}
+				else 
+				{
+					if (pppx<4)
+					{
+						pppx=pppx+0.1f;
+						//pppy=pppy+0.1f;
+					}
+					
+				}
+				pppy=2;
+				pppx=2;
+				last_bpp=current_bpp;
+				*/
+				
 				//if (i==1) {
 					//  pppx=pppx_prev;
 					//  pppy=pppy_prev;
@@ -3001,10 +3029,11 @@ public void compressVideoLHEsampled_V002(double rate_target)
 					  System.out.println(" downsampling last...");
 					  if (ancho_final!=lastvideoframe.width)
 					  {
-					  
+					  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_nodown.bmp",lastvideoframe.LHE_YUV[0]);
 					  lastvideoframe.down(ancho_final,alto_final,1,1, lastvideoframe.LHE_YUV[0]);
-					  }
 					  lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_down.bmp",lastvideoframe.LHE_YUV[0]);
+					  }
+					  //lastvideoframe.YUVtoBMP(output_directory+"/"+"_last_down.bmp",lastvideoframe.LHE_YUV[0]);
 				  }
 				  else if (pppx<pppx_prev)
 				  {//hay que escalar
@@ -3039,14 +3068,19 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 resfc=fc2.compressSIMPLELHE();//1, 1,1,1,false);
 				 //fc2.lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
 				 
+				 fc2.img.YUVtoBMP(output_directory+"/"+"_LHE.bmp",fc2.img.LHE_YUV[0]);
+				 
+				 
 				 total_bpp+=resfc[1];
 				 System.out.println ("-----------------rate:"+rate+"   ppp:"+pppx);
 				 System.out.println(" bpp (bitsperpixel) : "+(resfc[1]/(orig_ancho*orig_alto))+" bpp");
 				 System.out.println(" bit rate medio: "+(total_bpp*25)/(1000*(i+1))+" kbps");
-					
+				 
+				 //last_bpp=resfc[1]/(orig_ancho*orig_alto);
 				 
 				// sumamos a frame anterior
 				 fc2.img.sumadif(lastvideoframe.LHE_YUV[0],fc2.img.LHE_YUV[0],lastvideoframe.LHE_YUV[0]);
+				 
 				 
 				 
 				//escalamos el resultado y lo metemos en algun sitio, manteniendo el frame anterior a su resolucion
@@ -3058,7 +3092,8 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 fc3.img.width=lastvideoframe.width;
 				 fc3.img.height=lastvideoframe.height;
 				 lastvideoframe.copy(lastvideoframe.LHE_YUV[0], fc3.img.LHE_YUV[0]);
-				 //fc3.img.YUVtoBMP(output_directory+"/"+"noesc.bmp",fc3.img.LHE_YUV[0]);
+				 
+				 fc3.img.YUVtoBMP(output_directory+"/"+"_noesc.bmp",fc3.img.LHE_YUV[0]);
 				 
 				 //fc3.img.width=lastvideoframe.width;
 				 //fc3.img.height=lastvideoframe.height;
@@ -3078,7 +3113,7 @@ public void compressVideoLHEsampled_V002(double rate_target)
 				 System.out.println(" PSNR medio : "+(total_psnr/(i+1)));
 						 
 				 
-				
+				//if (i==3) break;
 			}
 			
 			//System.out.println(" average porcent:"+ (100*tot_porcent/frames.length)+" %");

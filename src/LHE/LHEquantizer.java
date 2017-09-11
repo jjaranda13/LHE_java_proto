@@ -4018,11 +4018,11 @@ public void initPreComputations()
 			if (cache_ratio[0][(int)(hop1)][hop0][rmax]>max)cache_ratio[0][hop1][hop0][rmax]=max;
 			if (cache_ratio[1][(int)(hop1)][hop0][rmax]>max)cache_ratio[1][hop1][hop0][rmax]=max;
 			
-			/*
+			
 			float min=1.0f;//esto sobra
 			if (cache_ratio[0][(int)(hop1)][hop0][rmax]<min)cache_ratio[0][hop1][hop0][rmax]=min;
 			if (cache_ratio[1][(int)(hop1)][hop0][rmax]<min)cache_ratio[1][hop1][hop0][rmax]=min;
-			*/
+			
 		
 			}
 		}
@@ -4077,6 +4077,22 @@ public void initPreComputations()
 
 	}//hop0
 	
+	
+	// checks
+	/*
+	for (int hop0=0;hop0<=255;hop0++)
+	{
+		for (int hop1=4;hop1<=10;hop1++)
+		{
+			for (int hn=0;hn<=8;hn++)
+			{
+				System.out.println("y="+hop0+" h1="+hop1+"  h"+hn+"="+pccr[hop1][hop0][30][hn]);
+			}
+		}
+	}
+	
+	if (3>2) System.exit(0);
+	*/
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //**************************************************************************************************
@@ -9427,13 +9443,19 @@ public int postRLC_v02(int[] hops,int[] result_YUV, int xini, int xfin, int yini
 System.out.println (" entrada en postRLC:");
 	int counterh0=0;
 	int counterh0_prev=0;
-	int mode=0; //0=nhuffman, 1=rlc
+	int mode=0; //0=huffman, 1=rlc
 	int mode_prev=mode;
 	int ahorro=0;
 	int gasto=0;
 	
-	TAMANO_RLC=4;//numero de bits del codigo RLC
-	TAMANO_condicion=8;//TAMANO_RLC; num hops nulos como condicion de cambio a modo RLC.
+	
+	
+	
+	int TAMANO_RLC_ini=4;//5;//4;//4;//numero de bits del codigo RLC
+	int TAMANO_condicion_ini=7;//6;//8;//TAMANO_RLC; num hops nulos como condicion de cambio a modo RLC.
+	
+	TAMANO_condicion=TAMANO_condicion_ini;
+	TAMANO_RLC=TAMANO_RLC_ini;
 	
 	//System.out.println("  dynamic RLC:  TAMANO_RLC="+TAMANO_RLC+"  TAMANO_condicion="+TAMANO_condicion);
 	//for (int y=0;y<img.height;y++)  {
@@ -9470,6 +9492,8 @@ System.out.println (" entrada en postRLC:");
 			{
 				mode=0;
 				counterh0=0;
+				//reset tamaños
+				
 			}
 			
 			
@@ -9479,6 +9503,7 @@ System.out.println (" entrada en postRLC:");
 				ahorro+=(int)(Math.pow(2, TAMANO_RLC)-1);
 				//gasto+=TAMANO_RLC;
 				gasto+=1;
+				TAMANO_RLC=5;
 				
 			}
 			if (mode_prev==1 && mode==0)
@@ -9487,6 +9512,8 @@ System.out.println (" entrada en postRLC:");
 				//gasto+=TAMANO_RLC;
 				ahorro+=counterh0_prev+1;//un bit extra porque sabemos que el siguiente sym no es h0
 				
+				TAMANO_condicion=TAMANO_condicion_ini;
+				TAMANO_RLC=TAMANO_RLC_ini;
 			}
 			
 		}//end y
@@ -9897,11 +9924,11 @@ public void quantize_SIMPLELHE_001(int[] hops,int[] result_YUV)
 
 System.out.println("quantizying LHE3...");
 
-int max_hop1=10;//8;//10;//10;
-int min_hop1=4;//4;//6; 
+int max_hop1=10;//10;//8;//10;//10;
+int min_hop1=4;//4;//4;//6; 
 
 
-int start_hop1=(max_hop1+min_hop1)/2;
+
 int rmax=25;//40;
 rmax=27;//27;
 
@@ -9910,11 +9937,13 @@ rmax=27;
 
 boolean potencia2=false;
 
-rmax=40;//40;//con razon 4 es una doble rotacion!!! muy rapido y mejoran todas las imagenes
+rmax=30;//27;//40;//con razon 4 es una doble rotacion!!! muy rapido y mejoran todas las imagenes
 //min_hop1=6;
 //rmax=40;
 
-if (potencia2) rmax=20;
+if (potencia2) {rmax=20;min_hop1=4;max_hop1=10;}
+
+int start_hop1=(max_hop1+min_hop1)/2;
 
 int hop1=start_hop1;//max_hop1;
 int hop0=0; // predicted signal
@@ -10069,8 +10098,10 @@ for (int y=0;y<img.height;y++)  {
 		
 		
 		//ESTE ES UN NUEVO MODO DE COMPRESION!!!!
-		//if (hop_number>4 && hop_number<6) hop_number=4;
-		//if (hop_number<4 && hop_number>2) hop_number=4;
+		//if (hop_number>4 && hop_number<6) {hop_number=4;valor_final= pccr[hop1][hop0][rmax][4];}
+		//if (hop_number<4 && hop_number>2) {hop_number=4;valor_final= pccr[hop1][hop0][rmax][4];}
+		//if (hop_number>4 ) {hop_number=5;valor_final= pccr[hop1][hop0][rmax][7];}
+		//if (hop_number<4 ) {hop_number=3;valor_final= pccr[hop1][hop0][rmax][1];}
 		
 		/*
 		 if (hop_number>4)
