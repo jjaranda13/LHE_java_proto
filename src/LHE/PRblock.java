@@ -396,15 +396,15 @@ public int log2(int dato)
 	    boolean lum_sign=true;
 	    boolean last_lum_sign=true;
 		
-	    int divisor=8;
+	    int divisor=6;//8;
 	    //int divisor2=4;
 	    //int divisor_ini=4;
 	    //int divisor_min=4;
 	    int max=4;
 		//-----------------
 		
-		boolean hop_sign=true;
-		boolean last_hop_sign=true;
+		//boolean hop_sign=true;
+		//boolean last_hop_sign=true;
 		PRx=0;
 		PRy=0;
 
@@ -414,8 +414,14 @@ public int log2(int dato)
 		float Cx=0;
 		float Cy=0; 
         
+		boolean dif_sign=true;//pos
 		//if (2>1) { System.out.println("hola");System.exit(0);}
 
+		int q0=4;//6;//4;
+		int q1=8;//12;//10;
+		int q2=24;//18;//30;
+		int q3=72;//24;//80;
+		
 		for (int y=yini;y<=yfin;y++)
 		{
 			if (y>0)
@@ -425,8 +431,23 @@ public int log2(int dato)
 				//lum_dif=0;//(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini])/divisor;
 				
 				int dif=(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini]);
+				//System.out.println ("dif inicial:"+dif);
+				//last_lum_dif=dif/divisor;
 				
-				last_lum_dif=dif/divisor;
+				//---------
+				dif_sign=(dif>=0);
+				if (dif<0) dif=-dif;
+				if (dif<q0) dif=0;
+				else if (dif<q1) dif=1;
+				else if (dif<q2) dif=2;
+				else if (dif<q3) dif=3;
+				else dif=4;
+				last_lum_dif=dif;
+				//-----------
+				
+				
+				
+				//System.out.println ("dif inicial/6:"+last_lum_dif);
 				//last_lum_dif=log2(dif);
 				//if (last_lum_dif>1) last_lum_dif=last_lum_dif/2;
 				
@@ -436,10 +457,14 @@ public int log2(int dato)
 				
 				if (last_lum_dif>max) last_lum_dif=max;
 				if (last_lum_dif<-max) last_lum_dif=-max;
-				//last_hop_sign=(last_hop>=0); //NUEVO 19/3/2015
-				last_lum_sign=(last_lum_dif>=0);
-				//last_lum_dif=0;
 				
+				//last_hop_sign=(last_hop>=0); //NUEVO 19/3/2015
+				
+				last_lum_sign=(last_lum_dif>=0);
+				
+				//------
+				last_lum_sign=dif_sign;
+				//-----
 				
 			}
 			//horizontal scanlines
@@ -450,9 +475,22 @@ public int log2(int dato)
 				int dif=0;
 				
 				if (x>0) dif=(img.YUV[0][(y)*img.width+x]-img.YUV[0][(y)*img.width+x-1]);
-					
-				lum_dif=dif/divisor;
+				//System.out.println ("dif:"+dif+    " x="+x);	
+				//lum_dif=dif/divisor;
 				
+				//---------
+				dif_sign=(dif>=0);
+				if (dif<0) dif=-dif;
+				if (dif<q0) dif=0;
+				else if (dif<q1) dif=1;
+				else if (dif<q2) dif=2;
+				else if (dif<q3) dif=3;
+				else dif=4;
+				lum_dif=dif;
+				//------------
+				
+				
+				//System.out.println ("dif/6:"+lum_dif);
 				//lum_dif=log2(dif);
 				
 				//if (lum_dif==4) lum_dif=3;
@@ -482,7 +520,11 @@ public int log2(int dato)
 				//hop_sign=(hop>=0);//NUEVO 19/3/2015 
 				lum_sign=(lum_dif>=0);
 				
-
+				//-------
+				lum_sign=dif_sign;
+				//-------
+				
+				
 				//if ((hop_sign!=last_hop_sign && last_hop!=0) || hop==4 || hop==-4) {//NUEVO 19/3/2015 
 				
 				if ((lum_sign!=last_lum_sign && last_lum_dif!=0) || lum_dif==max || lum_dif==-max ) {//NUEVO 19/3/2015 
@@ -540,7 +582,17 @@ public int log2(int dato)
 				
 				int dif=(img.YUV[0][(yini)*img.width+x]-img.YUV[0][(yini)*img.width+x-1]);
 				
-				last_lum_dif=dif/divisor;
+				//last_lum_dif=dif/divisor;
+				//---------
+				dif_sign=(dif>=0);
+				if (dif<0) dif=-dif;
+				if (dif<q0) dif=0;
+				else if (dif<q1) dif=1;
+				else if (dif<q2) dif=2;
+				else if (dif<q3) dif=3;
+				else dif=4;
+				last_lum_dif=dif;
+				//-----------
 				
 				//last_lum_dif=log2(dif);
 				//if (last_lum_dif>1) last_lum_dif=last_lum_dif/2;
@@ -552,6 +604,10 @@ public int log2(int dato)
 				
 				//last_hop_sign=(last_hop>=0); //NUEVO 19/3/2015
 				last_lum_sign=(last_lum_dif>=0);
+				
+				//----
+				last_lum_sign=dif_sign;
+				//----
 				
 				
 				//last_hop_sign=(last_hop>0);
@@ -570,7 +626,19 @@ public int log2(int dato)
 				
 				int dif=0;
 				if (y>0)dif=(img.YUV[0][y*img.width+x]-img.YUV[0][(y-1)*img.width+x]);
-	            lum_dif=dif/divisor;
+	            
+				//---------------
+				dif_sign=(dif>=0);
+				if (dif<0) dif=-dif;
+				if (dif<q0) dif=0;
+				else if (dif<q1) dif=1;
+				else if (dif<q2) dif=2;
+				else if (dif<q3) dif=3;
+				else dif=4;
+				lum_dif=dif;
+				//---------------
+				
+				//lum_dif=dif/divisor;
 	            
 	            //lum_dif=log2(dif);
 	            
@@ -596,6 +664,9 @@ public int log2(int dato)
 				//hop_sign=(hop>=0);//NUEVO 19/3/2015
 				lum_sign=(lum_dif>=0);
 				
+				//------
+				lum_sign=dif_sign;
+				//--------
 				
 				//if ((hop_sign!=last_hop_sign && last_hop!=0) || hop==4 || hop==-4){
 				

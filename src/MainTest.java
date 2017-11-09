@@ -51,7 +51,7 @@ public class MainTest {
 	System.out.println ("6) compute PSNR for a given image origin and degraded image");
 	System.out.println ("7) interpolate seams");
 	System.out.println ("8) compress LHE2");
-	System.out.println ("9) compress SIMPLE LHE ( = static huffman). fixed bit rate ");
+	System.out.println ("9) compress SIMPLE LHE ( basicLHE + static huffman). fixed bit rate ");
 	System.out.println ("10) compress image SIMPLE LHE sampled (preLHE2)");
 	System.out.println ("11) compress video SIMPLE LHE sampled (preLHE2)");
 	
@@ -320,7 +320,7 @@ public class MainTest {
 		}
 		//-------------------------------------------------
 		
-		System.out.println ("select interpolation method: 1)NN  or 2)BIL or 3)BIC or 4) EXPERIMENTAL 5) NNL 6) NNSR 7)EPX [default=3] :");
+		System.out.println ("select interpolation method: 1)NN  or 2)BIL or 3)BIC or 4) EXPERIMENTAL 5) NNL 6) NNSR 7)EPX 8)ADAPTIVE 9)adap2 [default=3] :");
 		String interpol = readKeyboard();
 		if (interpol.equals("")) interpol=new String("3");
 		
@@ -394,6 +394,9 @@ public class MainTest {
 		else if (interpol.equals("5")) fp.INTERPOL=new String("NNL");
 		else if (interpol.equals("6")) fp.INTERPOL=new String("NNSR");
 		else if (interpol.equals("7")) fp.INTERPOL=new String("EPX");
+		else if (interpol.equals("8")) fp.INTERPOL=new String("ADAPTIVE");
+		else if (interpol.equals("9")) fp.INTERPOL=new String("ADAPTIVE2");
+		
 		
 		fp.DEBUG=debug;
 		fp.img=fc.img;

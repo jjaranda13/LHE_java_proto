@@ -454,6 +454,11 @@ public void savePRtxtJavalanguage(String path_file)
 			for (int x=0;x<number_of_blocks_H+1;x++)
 			{
 				prbl[y][x].computePRmetrics();
+				
+				//System.out.println("fin primer bloque");
+				
+				//System.exit(0);
+				
 				//prbl[y][x].computePRmetrics4SPS(2,2);
 				//prbl[y][x].computePRmetrics4SPS(3,3);
 				//prbl[y][x].computePRmetrics4SPS(4,4);
@@ -7619,6 +7624,9 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 				b.ppp[1][3]=(k2/ (1f+k*prbl[by+1][bx+1].PRy))*compression_factor;
 */
 
+				
+				if (Block.MAX_PPP>4) Block.MAX_PPP=4;
+				//Block.MAX_PPP=1;
 				//this is an optimization to avoid some multiplications
 				float k=Block.MAX_PPP-1;
 				float k2=Block.MAX_PPP*compression_factor;
@@ -7686,7 +7694,7 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 				//esto es del 02/10/2014
 				//limitacion de la elasticidad a 3 veces
 				//------------------------------------------
-				float max_elastic=3f;// con un valor elevado estaria desactivado, pej 300
+				float max_elastic=3;//3f;// con un valor elevado estaria desactivado, pej 300
 				float maxppp=minppp*max_elastic;
 				for (int coord=0;coord<2;coord++)
 					for (int corner=0;corner<4;corner++)

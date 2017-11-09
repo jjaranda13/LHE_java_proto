@@ -16,7 +16,7 @@ public class FramePlayer {
 
 	public static String output_directory="./output_img";
 
-	public static boolean ssim_active=true;
+	public static boolean ssim_active=false;//true;
 	//*******************************************************
 	/**
 	 * this function interprete a lhe file and save a bmp file
@@ -66,6 +66,12 @@ public class FramePlayer {
 	
 				*/
 
+		
+		boolean flagAdaptive=false;
+		boolean flagAdaptive2=false;
+		if (INTERPOL.equals("ADAPTIVE")) flagAdaptive=true;
+		if (INTERPOL.equals("ADAPTIVE2")) flagAdaptive2=true;
+		
 		//ahora ya tenemos a downsampled LHE. procedemos a reescalar
 		//-------------------------------------------------------------
 		//puedo hacer V+H en cada bloque o bien primero V en todos y luego H en todos. da igual
@@ -145,6 +151,9 @@ public class FramePlayer {
 		//ademas de interpolar los boundaries hay que downsamplearlos y luego interpretar los hops
 		
 		
+		
+	
+		
 		//vamos a interpolar V y luego h
 		long lDateTime1 = new Date().getTime();
 		System.out.println("Date() - Time in milliseconds: " + lDateTime1);
@@ -167,15 +176,24 @@ public class FramePlayer {
 			    //if (bi.bilineal) bi.interpolateBilinealV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				
 				
+				//con esta funcion elegimos el tipo, que es diferente para cada bloque
+				if (flagAdaptive)  computeAdaptiveInterpol(y,x);
+				
+				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
 				
 				
 				if (INTERPOL.equals("BICUBIC")) bi.interpolateBicubicV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				else if (INTERPOL.equals("BILINEAL"))bi.interpolateBilinealV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
+				else if (INTERPOL.equals("BILINEAL_FALSA"))bi.interpolateBilinealV_false(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				else if (INTERPOL.equals("NN"))bi.interpolateNeighbourV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				else if (INTERPOL.equals("EXPERIMENTAL"))bi.interpolateAdaptV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				else if (INTERPOL.equals("NNL"))bi.interpolateNNLV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 				else if (INTERPOL.equals("NNSR"))bi.interpolateNNSRV_001(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
-				else if (INTERPOL.equals("EPX"))bi.interpolateEPXV_001(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
+				
+				//else if (INTERPOL.equals("EPX"))bi.interpolateEPXV_001(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
+				else if (INTERPOL.equals("EPX"))bi.interpolateNeighbourV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
+				
+				
 				
 				//if (bi.bilineal) bi.interpolateBicubicV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
 			//else	bi.interpolateNeighbourV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
@@ -192,7 +210,7 @@ public class FramePlayer {
 		
 		
 		
-		
+			
 		for ( int y=0 ; y<grid.number_of_blocks_V;y++)
 		{
 			for ( int x=0 ; x<grid.number_of_blocks_H;x++)
@@ -207,7 +225,12 @@ public class FramePlayer {
 					
 				}
 				*/
-				
+				//con esta funcion elegimos el tipo, que es diferente para cada bloque
+				if (flagAdaptive) 
+					{computeAdaptiveInterpol(y,x);
+					
+					}
+				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
 				
 				//if (bi.bilineal)bi.interpolateBilinealH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				//if (bi.PRavg<0.25f)
@@ -221,11 +244,16 @@ public class FramePlayer {
 				*/
 				if (INTERPOL.equals("BICUBIC")) bi.interpolateBicubicH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				else if (INTERPOL.equals("BILINEAL"))bi.interpolateBilinealH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
+				else if (INTERPOL.equals("BILINEAL_FALSA"))bi.interpolateBilinealH_false(img.intermediate_interpolated_YUV,img.interpolated_YUV);
+				//else if (INTERPOL.equals("BILINEAL_FALSA"))bi.interpolateNeighbourH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				else if (INTERPOL.equals("NN"))bi.interpolateNeighbourH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				else if (INTERPOL.equals("EXPERIMENTAL"))bi.interpolateAdaptH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				else if (INTERPOL.equals("NNL"))bi.interpolateNNLH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				else if (INTERPOL.equals("NNSR"))bi.interpolateNNSRH_001(img.intermediate_interpolated_YUV,img.interpolated_YUV);
-				else if (INTERPOL.equals("EPX"))bi.interpolateEPXH_001(img.intermediate_interpolated_YUV,img.interpolated_YUV);
+				
+				//else if (INTERPOL.equals("EPX"))bi.interpolateEPXH_001(img.intermediate_interpolated_YUV,img.interpolated_YUV);
+				
+				else if (INTERPOL.equals("EPX"))bi.interpolateNeighbourH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				
 			}
 		}
@@ -237,7 +265,12 @@ public class FramePlayer {
 		
 		if (DEBUG) System.out.println("Horizontal interpolation ok");
 		if (DEBUG) img.YUVtoBMP("./output_debug/interH.bmp",img.interpolated_YUV[0]);
-		//--------------------interpolate gaps-------------------------------------
+		
+		
+		
+		
+		
+		//--------------------interpolate gaps (=costuras)-------------------------------------
 
 		//if (DEBUG) System.out.println("bilineal es "+bilineal);
 		
@@ -250,7 +283,18 @@ public class FramePlayer {
 		//}
 		
 		
-		if (!INTERPOL.equals("NN"))
+		
+		//lo dejo en adaptive para interpolar costuras
+		//if (flagAdaptive) INTERPOL=new String("ADAPTIVE");
+		
+		//if (!INTERPOL.equals("NN"))
+		
+		
+		//ponemos bilineal en caso adaptativo para hacer costuras
+		if (flagAdaptive) INTERPOL=new String("BILINEAL");
+		if (flagAdaptive2) INTERPOL=new String("NN"); //para que no haga costuras
+		
+		if (!INTERPOL.equals("NN") )	
 		//if (bilineal)//bilineal
 		{
 			for ( int y=0 ; y<grid.number_of_blocks_V;y++)
@@ -263,9 +307,10 @@ public class FramePlayer {
 					if (x>0) b_left=grid.bl[y][x-1];
 					//if (DEBUG) System.out.println("interpolando GAPH bloque:"+x+","+y);
 					//if (bi.bilineal) 
-						bi.interpolateGapH(b_left);
+					//	bi.interpolateGapH(b_left);
+					
 					if (INTERPOL.equals("BICUBIC")) bi.interpolateGapHBicubic(b_left);
-					//else if (INTERPOL.equals("BILINEAL"))bi.interpolateGapH(b_left);
+					else if (INTERPOL.equals("BILINEAL"))bi.interpolateGapH(b_left);
 					 
 					
 
@@ -302,9 +347,30 @@ public class FramePlayer {
 
 			//---
 		}
-
+       
 		
-		if (INTERPOL.equals("EPX")) {
+		//en adaptativo  el epx se aplica solo a algunos bloques
+		if (flagAdaptive || flagAdaptive2) 
+			{
+
+		for ( int y=0 ; y<grid.number_of_blocks_V;y++)
+		{
+			for ( int x=0 ; x<grid.number_of_blocks_H;x++)
+
+			{
+				Block bi=grid.bl[y][x];
+				if (flagAdaptive) computeAdaptiveInterpol(y,x);
+				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
+				if (INTERPOL.equals("EPX"))
+					bi.filterEPX2x(11,16);
+				
+			}
+		}
+			}
+		
+		
+		//ojo el tipo epx es para toda la imagen
+		else if (INTERPOL.equals("EPX")) {
 			
 			
 			//filterEPX4x(16);
@@ -366,6 +432,125 @@ public class FramePlayer {
 		
 		
 	}
+	//*************************************************************************
+	//esta funcion elige el tipo de interpolacion para un bloque segun sus metricas de PR
+	public void computeAdaptiveInterpol(int y, int x)
+	{
+		//Block b=grid.bl[y][x];
+		/*
+		float prx0=grid.prbl[y][x].PRx;
+		float prx1=grid.prbl[y][x+1].PRx;
+		float prx2=grid.prbl[y+1][x].PRx;
+		float prx3=grid.prbl[y+1][x+1].PRx;
+		
+		float pry0=grid.prbl[y][x].PRy;
+		float pry1=grid.prbl[y][x+1].PRy;
+		float pry2=grid.prbl[y+1][x].PRy;
+		float pry3=grid.prbl[y+1][x+1].PRy;
+		*/
+		
+		// calculo de las PR minimas
+		float prminy=1;
+		float prminx=1;
+		for (int i=y;i<=y+1;i++)
+		{
+			for (int j=x;j<=x+1;j++)
+			{
+				if (grid.prbl[i][j].PRx<prminx) prminx=grid.prbl[i][j].PRx;
+				if (grid.prbl[i][j].PRy<prminy) prminy=grid.prbl[i][j].PRy;
+			}
+		}
+		//si PR es cero o 0.125 nos vamos a bilineal
+		if (prminy<=0.125 && prminx<=0.125) INTERPOL=new String ("BILINEAL");
+		else
+		{
+		//si PPPmin es >2 nos vamos a EPX
+			float pppxmin=8;
+			float pppymin=8;
+			float pppxmax=1;
+			float pppymax=1;
+			
+			for (int i=0;i<=3;i++)
+			{
+					if (grid.bl[y][x].ppp[0][i]<pppxmin) pppxmin=grid.bl[y][x].ppp[0][i];
+					if (grid.bl[y][x].ppp[1][i]<pppymin) pppymin=grid.bl[y][x].ppp[1][i];
+					if (grid.bl[y][x].ppp[0][i]>pppxmax) pppxmax=grid.bl[y][x].ppp[0][i];
+					if (grid.bl[y][x].ppp[1][i]>pppymax) pppymax=grid.bl[y][x].ppp[1][i];
+				
+			}
+			
+			// si el ppp es bajo, una bilineal queda muy bien, pero tambien un epx
+			//if (pppxmax<3 && pppymax<3) INTERPOL=new String ("BILINEAL"); 
+			//else
+				//si el ppp supera 2 se puede aplicar epx
+				if (pppxmin>=2 || pppymin>=2) INTERPOL=new String ("EPX");
+		//else nos vamos a vecino (PPP<2)
+			else INTERPOL=new String ("NN");
+				
+	
+		}
+		//finalmente debe escribir en la variable INTERPOL
+		//INTERPOL=new String ("NN");
+		
+	}
+	
+	
+	//*************************************************************************
+	public void computeAdaptiveInterpol2(int y, int x)
+	{
+		Block b=grid.bl[y][x];
+		/*
+		float prx0=grid.prbl[y][x].PRx;
+		float prx1=grid.prbl[y][x+1].PRx;
+		float prx2=grid.prbl[y+1][x].PRx;
+		float prx3=grid.prbl[y+1][x+1].PRx;
+		
+		float pry0=grid.prbl[y][x].PRy;
+		float pry1=grid.prbl[y][x+1].PRy;
+		float pry2=grid.prbl[y+1][x].PRy;
+		float pry3=grid.prbl[y+1][x+1].PRy;
+		*/
+		
+		// calculo de las PR minimas
+		float prminy=1;
+		float prminx=1;
+		
+		float pppxmin=8;
+		float pppymin=8;
+		float pppxmax=1;
+		float pppymax=1;
+		
+		for (int i=y;i<=y+1;i++)
+		{
+			for (int j=x;j<=x+1;j++)
+			{
+				if (grid.prbl[i][j].PRx<prminx) prminx=grid.prbl[i][j].PRx;
+				if (grid.prbl[i][j].PRy<prminy) prminy=grid.prbl[i][j].PRy;
+			}
+		}
+		//ya tenemos PR min
+		
+			
+			for (int i=0;i<=3;i++)
+			{
+					if (grid.bl[y][x].ppp[0][i]<pppxmin) pppxmin=grid.bl[y][x].ppp[0][i];
+					if (grid.bl[y][x].ppp[1][i]<pppymin) pppymin=grid.bl[y][x].ppp[1][i];
+					if (grid.bl[y][x].ppp[0][i]>pppxmax) pppxmax=grid.bl[y][x].ppp[0][i];
+					if (grid.bl[y][x].ppp[1][i]>pppymax) pppymax=grid.bl[y][x].ppp[1][i];
+				
+			}
+		//ya tenemos pppmin y pppmax
+			
+			if (pppxmax<1.5 && pppymax<1.5) INTERPOL=new String ("NN");
+			else if (prminx<=0.125 && prminy<=0.125 )INTERPOL=new String ("EPX");//("BILINEAL_FALSA");
+			else INTERPOL=new String ("EPX");
+			
+			//INTERPOL=new String ("BILINEAL_FALSA");
+	
+	
+	}
+	
+	
 	//*************************************************************************
 	public float[] playFrameDiffNOUSO(String path_img)
 	{
