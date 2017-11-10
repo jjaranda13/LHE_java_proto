@@ -126,20 +126,28 @@ public float[] compressBasicFrame(String optionratio)
 	
 	//esta tiene el colin
 	if (optionratio.equals("1"))
+	{
 	//lhe.quantizeOneHopPerPixel_R(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_initial(img.hops[0],img.LHE_YUV[0]);
 	
-	lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
+		
+	//ESTAS 2 SON LAS BUENAS	
+	//lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
+	lhe.quantizeOneHopPerPixel_R5_improved(img.hops[0],img.LHE_YUV[0]);
+	
+	
+	
+	
 	//lhe.quantizeOneHopPerPixel_improved02(img.hops[0],img.LHE_YUV[0]);
-	
 	//lhe.quantizeOneHopPerPixel_R_LHE2(img.hops[0],img.LHE_YUV[0]);
-	
 	//esta no tiene el colin
 	//lhe.quantizeOneHopPerPixel(img.hops[0],img.LHE_YUV[0]);
-	
+	}
 	
 	if (optionratio.equals("2"))
+	{
 	lhe.quantizeOneHopPerPixelBin(img.hops[0],img.LHE_YUV[0]);
+	}
 	
 	lhe.filter_multualinfo(img.hops[0],img.LHE_YUV[0]);
 	
