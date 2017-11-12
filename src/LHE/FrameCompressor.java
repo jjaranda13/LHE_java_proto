@@ -133,8 +133,8 @@ public float[] compressBasicFrame(String optionratio)
 		
 	//ESTAS 2 SON LAS BUENAS	
 	//lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
-	lhe.quantizeOneHopPerPixel_R5_improved(img.hops[0],img.LHE_YUV[0]);
-	
+	//lhe.quantizeOneHopPerPixel_R5_improved(img.hops[0],img.LHE_YUV[0]);
+	lhe.quantizeOneHopPerPixel_R6(img.hops[0],img.LHE_YUV[0]);
 	
 	
 	
@@ -574,7 +574,10 @@ public float[] compressFrame(float ql)
 				//lhe.quantizeDownsampledBlock_R4_noise(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				//lhe.quantizeDownsampledBlock_R5(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				//lhe.quantizeDownsampledBlock_R4_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
-				lhe.quantizeDownsampledBlock_R5_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
+				//lhe.quantizeDownsampledBlock_R5_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
+				lhe.quantizeDownsampledBlock_R6(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
+				
+				
 				
 				//lhe.quantizeDownsampledBlock_R2(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				net_savings+=lhe.postRLC_v02(img.hops[0],img.downsampled_LHE_YUV[0],bi.xini,bi.downsampled_xfin, bi.yini,bi.downsampled_yfin);
