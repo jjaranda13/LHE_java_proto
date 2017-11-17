@@ -7626,6 +7626,8 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 
 				
 				if (Block.MAX_PPP>4) Block.MAX_PPP=4;
+				
+				//if (Block.MAX_PPP>8) Block.MAX_PPP=8;
 				//Block.MAX_PPP=1;
 				//this is an optimization to avoid some multiplications
 				float k=Block.MAX_PPP-1;

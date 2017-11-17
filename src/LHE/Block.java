@@ -7214,8 +7214,8 @@ public int[] getEPX(int a, int b, int c, int d, int o)
 	
 	return res;
 }
-
-public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void downsampleSPSOneShot_mal( int[][] src_YUV, int[][] result_YUV)
 {
 	//we assume that the block has already rectangle shape, 
 	// during this "Horizontal" processing we fill  the "horizontal_downsampled_YUV" array
@@ -7311,6 +7311,81 @@ public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
 		
 		//if (y_sc>downsampled_yfin) y_sc=downsampled_yfin;
 		//if (y>yfin) break;
+	}//y
+
+
+}
+
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
+{
+	// we assume that the block has already rectangle shape, 
+	// during this "Horizontal" processing we fill  the "horizontal_downsampled_YUV" array
+	// gradient PPPx side a
+	
+	//initialization of ppp 
+	float ppp_xa=ppp[0][0];
+	float ppp_xb=ppp[0][1];
+    float ppp_ya=ppp[1][0];
+    float ppp_yb=ppp[1][1];
+    float ppp_yc=ppp[1][0];
+    
+	//gradient side a
+	float gr_a_pppx=(ppp[0][2]-ppp[0][0])/(ly_sc-1);
+	float gr_a_pppy=(ppp[1][2]-ppp[1][0])/(ly_sc-1);
+
+	//gradient side b
+	float gr_b_pppx=(ppp[0][3]-ppp[0][1])/(ly_sc-1);
+	float gr_b_pppy=(ppp[1][3]-ppp[1][1])/(ly_sc-1);
+
+    //gradient side c. ojo aqui usamos lx_sc
+    float gr_c_pppy=(ppp[1][1]-ppp[1][0])/(lx_sc-1);
+    
+    float ya=yini;//mundo real
+    
+	for (int y_sc=yini;y_sc<=downsampled_yfin;y_sc++)
+	{
+		ppp_yc=ppp[1][0];
+		float gr_pppx=(ppp_xb-ppp_xa)/(lx_sc-1f);
+		float gr_pppy=(ppp_yb-ppp_ya)/(lx_sc-1f);
+	    
+		//initialization of pppx at start of scanline
+		float pppx=ppp_xa;
+		float xa=xini;
+		
+		//initialization of pppy at start of scanline
+		float pppy=ppp_ya;
+		ya+=ppp_ya/2;
+		
+		//dominio original
+		float y=ya;
+		float x=xa;
+		
+		for (int x_sc=xini;x_sc<=downsampled_xfin;x_sc++)
+		{
+			x+=pppx/2;
+			y=(int)(yini+ppp_yc/2+((pppy+ppp_yc)*(y_sc-yini))/2);
+			
+			result_YUV[0][y_sc*img.width+x_sc]=src_YUV[0][(int)y*img.width+(int)(x)];
+			
+			
+			pppx+=gr_pppx;
+			x+=pppx/2;
+			
+			ppp_yc+=gr_c_pppy;
+			pppy+=gr_pppy;
+
+		}//x
+		ppp_xa+=gr_a_pppx;
+		ppp_xb+=gr_b_pppx;
+		ppp_ya+=gr_a_pppy;
+		ppp_yb+=gr_b_pppy;
+		
+		ya+=ppp_ya/2;
+		
 	}//y
 
 

@@ -9605,7 +9605,7 @@ public void quantizeOneHopPerPixel_R6(int[] hops,int[] result_YUV)
 	
 	int soft_counter=0;
 	int soft_threshold=8;//16;
-	int mode=1;//1; //0=normal, 1=suave
+	int mode=0;//1; //0=normal, 1=suave
 	//int color=0;
 	int lhe_mode[]=new int[2];
 	
@@ -9641,6 +9641,10 @@ public void quantizeOneHopPerPixel_R6(int[] hops,int[] result_YUV)
 				
 				//hop1=max_hop1;
 				hop1=start_hop1;
+				
+				//new scanline reset mode
+				mode=0;
+				soft_counter=0;
 			}
 			else if ((x==img.width-1) && (y>0)) {
 				hop0=(4*result_YUV[pix-1]+2*result_YUV[pix-img.width])/6;				
@@ -9661,7 +9665,7 @@ public void quantizeOneHopPerPixel_R6(int[] hops,int[] result_YUV)
 			//hop0 is prediction
 			
 			
-			mode=0;//log
+			//mode=0;//log
 			
 			//positive hops computation
 			//-------------------------
@@ -9721,7 +9725,7 @@ public void quantizeOneHopPerPixel_R6(int[] hops,int[] result_YUV)
 
 			  if( (small_hop) && (last_small_hop))  {
 		 		hop1=hop1-1;
-		 		//min_hop1=2;
+		 		
 	 			if (hop1<min_hop1) hop1=min_hop1;
 			  } 
 			  else {
@@ -11049,6 +11053,9 @@ public void quantizeDownsampledBlock_R6(Block b, int[] hops,int[] result_YUV, in
 				hop1=start_hop1;
 				
 				
+				
+				
+				
 				//System.out.println("d");
 				
 			}
@@ -11065,6 +11072,13 @@ public void quantizeDownsampledBlock_R6(Block b, int[] hops,int[] result_YUV, in
 				//last_small_hop=true;//porque no
 				//comento esto 12/09/2014
 				hop1=start_hop1;//31/12/2014 se descomenta
+				
+				//start scanline
+				mode=0;
+				soft_counter=0;
+				min_hop1=2;
+				hop1=min_hop1;
+				
 			}
 			//corners of left side of the image.
 			//----------------------------------------- 
@@ -11282,7 +11296,7 @@ public void quantizeDownsampledBlock_R6(Block b, int[] hops,int[] result_YUV, in
 				
 				//mode=1;
 				min_hop1=2;//en lugar de pasar a modo lineal, reduzco min_hop1;
-				hop1=min_hop1=2;
+				hop1=min_hop1;//=2;
 				
 				}///lineal
 			
