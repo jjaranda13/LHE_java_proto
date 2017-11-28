@@ -7696,7 +7696,7 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 				//esto es del 02/10/2014
 				//limitacion de la elasticidad a 3 veces
 				//------------------------------------------
-				float max_elastic=3;//3f;// con un valor elevado estaria desactivado, pej 300
+				float max_elastic=3;//3;//3f;// con un valor elevado estaria desactivado, pej 300
 				float maxppp=minppp*max_elastic;
 				for (int coord=0;coord<2;coord++)
 					for (int corner=0;corner<4;corner++)

@@ -55,7 +55,9 @@ public class Block {
 	//ppp[1][3] is ppp_y_3
 
 	///constant(final)  max value of any PPP. any instance of block share this maximum value (static)
-	// a maximum PPP=20 means that maximum spatial compression is 1/(20x20) =0.0025  ( 0.25 % of original size) 
+	// a maximum PPP=20 means that maximum spatial compression is 1/(20x20) =0.0025  ( 0.25 % of original size)
+	
+	//OJO PPPmax se ajusta en fromPRtoPPP(), alli se machaca el valor que se ponga aqui
 	public static float MAX_PPP=8;//20;//8;//4; //20;//20;//8;//16;//16;
 	
 

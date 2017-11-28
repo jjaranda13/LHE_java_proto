@@ -100,6 +100,8 @@ public float[] compressFrame( String path_img, float cf)
 	//load image into memory, transforming into YUV format
 	loadFrame( path_img);
 	
+	
+	
 	//compress the loaded frame 
 	return compressFrame(cf);
 }
@@ -118,6 +120,10 @@ public float[] compressBasicFrame(String optionratio)
 {
 	float[] result=new float[2];//PSNR and bitrate
 	
+	
+	System.out.println(" hola gradient");
+	//img.create_gradient(-1f);
+	
 	img.YUVtoBMP("./output_debug/orig_YUV_BN.bmp",img.YUV[0]);
 	
 	//lhe.initGeomR();//initialize hop values 
@@ -134,8 +140,8 @@ public float[] compressBasicFrame(String optionratio)
 	//ESTAS 2 SON LAS BUENAS	
 	//lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_R5_improved(img.hops[0],img.LHE_YUV[0]);
-	lhe.quantizeOneHopPerPixel_R6(img.hops[0],img.LHE_YUV[0]);
-	
+	//lhe.quantizeOneHopPerPixel_R6(img.hops[0],img.LHE_YUV[0]);
+		lhe.quantizeOneHopPerPixel_R7(img.hops[0],img.LHE_YUV[0]);
 	
 	
 	//lhe.quantizeOneHopPerPixel_improved02(img.hops[0],img.LHE_YUV[0]);
@@ -425,6 +431,11 @@ public float[] compressLHE2()
  */
 public float[] compressFrame(float ql)
 	{
+	
+	System.out.println(" hola gradient");
+	//img.create_gradient(1f);
+	
+	
 		//frame must be loaded and grid created
 	System.out.println( "=============================");
 	System.out.println( "entrada en compressFrame()");
@@ -575,8 +586,9 @@ public float[] compressFrame(float ql)
 				//lhe.quantizeDownsampledBlock_R5(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				//lhe.quantizeDownsampledBlock_R4_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
 				//lhe.quantizeDownsampledBlock_R5_improved(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
-				lhe.quantizeDownsampledBlock_R6(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
-				
+				//lhe.quantizeDownsampledBlock_R6(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
+				lhe.quantizeDownsampledBlock_R7(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );
+							
 				
 				
 				//lhe.quantizeDownsampledBlock_R2(bi, img.hops[0],img.downsampled_LHE_YUV[0], img.downsampled_YUV[0],img.boundaries_YUV[0] );

@@ -882,7 +882,29 @@ height=orig.height;
 			}
 			
 	}
+	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		public void  create_gradient(float step)
+		{
+			System.out.println("ENTRADA EN GRADIENT");
+			System.out.println( "width: "+width+ "   height:"+height);
+			float colorf=0;
+			for (int y=0;y<height;y+=1){
+				for (int x=0;x<width;x+=1)
+				{
+					
+					YUV[0][(y*width)+x]=(int)colorf;
+					colorf=colorf+step;
+					if (colorf>255) colorf=colorf-255;
+					if (colorf<0) colorf=255-colorf;
+				}
+			colorf=YUV[0][(y*width)+1];
+		    //if (colorf<0) colorf=colorf+255;
+			//colorf=colorf % 255;
+		}
+		}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
 	public void  createChess()
 	{
 		int color=192;
