@@ -7484,7 +7484,7 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 			    {
 				
 				  filter1pixSoft(im,y,x);
-			  
+				 // filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
 				//System.out.println ("**********************************************");
 			    }
 			  else if (pppx>=umbral_ppp && pppy>=umbral_ppp)
@@ -7520,7 +7520,9 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 //*************************************************
 public void filter1pixSoft(int [] im, int y, int x)
 {
-	im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
+	//im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
+	
+	im[y*img.width+x]=(im[y*img.width+x-1]+im[(y-1)*img.width+x]+im[y*img.width+x])/3;
 }
 
 
