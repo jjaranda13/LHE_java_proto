@@ -7453,7 +7453,7 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 	
 	
 	float umbral_ppp=1.5f;
-	float umbral_pr=0.25f;
+	float umbral_pr=0.125f;
 	
 	
 	for (int y=yini; y<=yfin;y++)
