@@ -69,8 +69,11 @@ public class FramePlayer {
 		
 		boolean flagAdaptive=false;
 		boolean flagAdaptive2=false;
+		boolean flagEPXP=false;
 		if (INTERPOL.equals("ADAPTIVE")) flagAdaptive=true;
 		if (INTERPOL.equals("ADAPTIVE2")) flagAdaptive2=true;
+		if (INTERPOL.equals("EPXP")) flagEPXP=true;
+		
 		
 		//ahora ya tenemos a downsampled LHE. procedemos a reescalar
 		//-------------------------------------------------------------
@@ -160,6 +163,9 @@ public class FramePlayer {
 		//for (int cosa=1;cosa<1000;cosa++)
 		{
 		
+			
+			
+			
 		for ( int y=0 ; y<grid.number_of_blocks_V;y++)
 		{
 			for ( int x=0 ; x<grid.number_of_blocks_H;x++)
@@ -180,6 +186,9 @@ public class FramePlayer {
 				if (flagAdaptive)  computeAdaptiveInterpol(y,x);
 				
 				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
+				
+				if (flagEPXP) INTERPOL=new String ("NN"); 
+				
 				
 				
 				if (INTERPOL.equals("BICUBIC")) bi.interpolateBicubicV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
@@ -231,6 +240,8 @@ public class FramePlayer {
 					
 					}
 				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
+				
+				
 				
 				//if (bi.bilineal)bi.interpolateBilinealH(img.intermediate_interpolated_YUV,img.interpolated_YUV);
 				//if (bi.PRavg<0.25f)
@@ -367,7 +378,24 @@ public class FramePlayer {
 			}
 		}
 			}
-		
+		//---------------------------------		
+		else if (flagEPXP)
+		{
+
+			for ( int y=0 ; y<grid.number_of_blocks_V;y++)
+			{
+				for ( int x=0 ; x<grid.number_of_blocks_H;x++)
+
+				{
+
+			
+			//aplicamos EPX si ppp > umbral, de forma selectiva pixel a pixel
+			Block bi=grid.bl[y][x];
+			bi.filterEPXP(11,16);
+				}
+			}
+		}
+		//--------------------------
 		
 		//ojo el tipo epx es para toda la imagen
 		else if (INTERPOL.equals("EPX")) {

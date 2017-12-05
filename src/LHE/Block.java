@@ -7412,6 +7412,65 @@ public void filterEPX2x(int u1,int u2 )
 	System.out.println("filtered !");
 }
 //****************
+//****************************************************************************************
+// est funcion filtra por epx selectivamente segun el pppx y pppy
+public void filterEPXP(int u1,int u2 )
+{
+//esta funcion filtra por EPX la imagen 
+	int[] im=img.interpolated_YUV[0];
+	System.out.println("filtering EPX...");
+	
+	float pppax=ppp[0][0];
+	float pppbx=ppp[0][1];
+	float pppx=pppax;
+	
+	float pppay=ppp[1][0];
+	float pppby=ppp[1][1];
+	float pppy=pppay;
+	
+	
+	float gry_pppax=(ppp[0][2]-ppp[0][0])/(yfin-yini);// constante, es el lado a
+	float gry_pppbx=(ppp[0][1]-ppp[0][3])/(yfin-yini);// constante, es el lado b
+	
+	float gry_pppay=(ppp[1][2]-ppp[1][0])/(yfin-yini);// constante, es el lado a
+	float gry_pppby=(ppp[1][1]-ppp[1][3])/(yfin-yini);// constante, es el lado b
+	
+	
+	float umbral_ppp=1.8f;
+	for (int y=yini; y<yfin;y++)
+	{
+		pppx=pppax;
+		pppy=pppay;
+		float grx_pppx=(pppbx-pppax)/(xfin-xini);//variable segun scanline
+		float grx_pppy=(pppby-pppay)/(xfin-xini);//variable segun scanline
+			
+		//System.out.println ("hola");
+		for (int x=xini; x<xfin-1;x++)
+		{
+			//filter1pixEPX2x(im,y,x,u); //filtra 1pixel
+			//filter1pixEPX2x_002(im,y,x,u); //filtra 1pixel
+			//if (y>0 && x>1)
+			if (x>0 && y>0 && x<img.width && y<img.height)
+			{
+				
+			if (pppx>umbral_ppp && pppy>umbral_ppp)
+			  {
+			  filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
+			  }
+			}
+			pppx+=grx_pppx;
+			pppy+=grx_pppy;
+		}	
+		pppax+=gry_pppax;
+		pppbx+=gry_pppbx;
+		pppay+=gry_pppay;
+		pppby+=gry_pppby;
+	}
+	System.out.println("filtered !");
+}
+
+
+
 //*************************************************************************************
 public void filter1pixEPX2x_003(int[] im,int y,int x, int um1, int um2)
 {
