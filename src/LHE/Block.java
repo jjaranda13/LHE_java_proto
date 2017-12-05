@@ -7413,13 +7413,29 @@ public void filterEPX2x(int u1,int u2 )
 }
 //****************
 //****************************************************************************************
-// est funcion filtra por epx selectivamente segun el pppx y pppy
-public void filterEPXP(int u1,int u2 )
+// est funcion filtra por epx selectivamente segun el pppx y pppy, pix a pix dentro del bloque
+public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 {
 //esta funcion filtra por EPX la imagen 
 	int[] im=img.interpolated_YUV[0];
 	System.out.println("filtering EPX...");
 	
+	//gradientes de PR
+	float prax=prbl[by][bx].PRx;
+	float prbx=prbl[by][bx+1].PRx;
+	float pray=prbl[by][bx].PRy;
+	float prby=prbl[by][bx+1].PRy;
+	
+	float prx=prax;
+	float pry=pray;
+	
+	float gry_prax=(prbl[by+1][bx].PRx-prbl[by][bx].PRx)/(yfin-yini);
+	float gry_prbx=(prbl[by+1][bx+1].PRx-prbl[by][bx+1].PRx)/(yfin-yini);
+	float gry_pray=(prbl[by+1][bx].PRy-prbl[by][bx].PRy)/(yfin-yini);
+	float gry_prby=(prbl[by+1][bx+1].PRy-prbl[by][bx+1].PRy)/(yfin-yini);
+	
+	
+	//gradientes de PPP
 	float pppax=ppp[0][0];
 	float pppbx=ppp[0][1];
 	float pppx=pppax;
@@ -7436,39 +7452,76 @@ public void filterEPXP(int u1,int u2 )
 	float gry_pppby=(ppp[1][1]-ppp[1][3])/(yfin-yini);// constante, es el lado b
 	
 	
-	float umbral_ppp=1.8f;
-	for (int y=yini; y<yfin;y++)
+	float umbral_ppp=1.5f;
+	float umbral_pr=0.25f;
+	
+	
+	for (int y=yini; y<=yfin;y++)
 	{
 		pppx=pppax;
 		pppy=pppay;
+		
+		prx=prax;
+		pry=pray;
+		
 		float grx_pppx=(pppbx-pppax)/(xfin-xini);//variable segun scanline
 		float grx_pppy=(pppby-pppay)/(xfin-xini);//variable segun scanline
-			
+		
+		float grx_prx=(prbx-prax)/(xfin-xini);//variable segun scanline
+		float grx_pry=(prby-pray)/(xfin-xini);//variable segun scanline
+		
+		
+		
 		//System.out.println ("hola");
-		for (int x=xini; x<xfin-1;x++)
+		for (int x=xini; x<=xfin;x++)
 		{
 			//filter1pixEPX2x(im,y,x,u); //filtra 1pixel
 			//filter1pixEPX2x_002(im,y,x,u); //filtra 1pixel
 			//if (y>0 && x>1)
-			if (x>0 && y>0 && x<img.width && y<img.height)
+			if (x>0 && y>0 && x<img.width-1 && y<img.height-1)
 			{
+			  if (prx<=umbral_pr && pry<=umbral_pr)
+			    {
 				
-			if (pppx>umbral_ppp && pppy>umbral_ppp)
-			  {
-			  filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
-			  }
+				  filter1pixSoft(im,y,x);
+			  
+				//System.out.println ("**********************************************");
+			    }
+			  else if (pppx>=umbral_ppp && pppy>=umbral_ppp)
+			    {
+				  
+			      filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
+			     
+			    }
 			}
 			pppx+=grx_pppx;
 			pppy+=grx_pppy;
+			
+			prx+=grx_prx;
+			pry+=grx_pry;
+			
+			//System.out.println ("prx:"+prx+ "     pry:"+pry);
 		}	
 		pppax+=gry_pppax;
 		pppbx+=gry_pppbx;
 		pppay+=gry_pppay;
 		pppby+=gry_pppby;
+		
+		prax+=gry_prax;
+		prbx+=gry_prbx;
+		pray+=gry_pray;
+		prby+=gry_prby;
+		
+		
 	}
 	System.out.println("filtered !");
 }
 
+//*************************************************
+public void filter1pixSoft(int [] im, int y, int x)
+{
+	im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
+}
 
 
 //*************************************************************************************

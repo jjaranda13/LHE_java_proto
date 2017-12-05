@@ -391,7 +391,7 @@ public class FramePlayer {
 			
 			//aplicamos EPX si ppp > umbral, de forma selectiva pixel a pixel
 			Block bi=grid.bl[y][x];
-			bi.filterEPXP(11,16);
+			bi.filterEPXP(11,16, y,x, grid.prbl);
 				}
 			}
 		}
