@@ -7480,6 +7480,22 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 			//if (y>0 && x>1)
 			if (x>0 && y>0 && x<img.width-1 && y<img.height-1)
 			{
+				/*
+			if (prx<=umbral_pr)
+			{
+				im[y*img.width+x]=(im[y*img.width+x-1]+im[(y)*img.width+x])/2;
+				if (pry<=umbral_pr)
+				{
+					im[y*img.width+x]=(int)(0.33f*im[(y-1)*img.width+x]+0.67f*im[(y)*img.width+x]);
+				}
+				
+			}
+			else if (pry<=umbral_pr)
+			{
+				im[y*img.width+x]=(im[(y-1)*img.width+x]+im[(y)*img.width+x])/2;
+			}
+			*/
+				
 			  if (prx<=umbral_pr && pry<=umbral_pr)
 			    {
 				
@@ -7487,6 +7503,7 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 				 // filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
 				//System.out.println ("**********************************************");
 			    }
+			    
 			  else if (pppx>=umbral_ppp && pppy>=umbral_ppp)
 			    {
 				  
@@ -7520,9 +7537,9 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 //*************************************************
 public void filter1pixSoft(int [] im, int y, int x)
 {
-	//im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
+	im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
 	
-	im[y*img.width+x]=(im[y*img.width+x-1]+im[(y-1)*img.width+x]+im[y*img.width+x])/3;
+	//im[y*img.width+x]=(im[y*img.width+x-1]+im[(y-1)*img.width+x]+im[y*img.width+x])/3;
 }
 
 
