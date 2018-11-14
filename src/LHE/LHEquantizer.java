@@ -9949,7 +9949,9 @@ public void quantizeOneHopPerPixel_R7(int[] hops,int[] result_YUV)
 			//-------------------------
 			if (oc-hop0>=0) 
 			{
+				//for (int j=4;j<=8;j++) {
 				for (int j=4;j<=8;j++) {
+					//if (j==5 ) j=7;
 					
 					e2=oc-pccr[hop1][hop0][rmax][j];
 					//e2=oc-pccr[hop1][hop0][rmax][j];
@@ -9966,7 +9968,9 @@ public void quantizeOneHopPerPixel_R7(int[] hops,int[] result_YUV)
 			//-------------------------
 			else 
 			{
+				//for (int j=4;j>=0;j--) {
 				for (int j=4;j>=0;j--) {
+					//if (j==3 ) j=1;
 					
 					e2=pccr[hop1][hop0][rmax][j]-oc;
 					if (e2<0) e2=-e2;
@@ -9978,7 +9982,8 @@ public void quantizeOneHopPerPixel_R7(int[] hops,int[] result_YUV)
 				}
 			}
 
-			
+			//if (hop_number>5) {hop_number++;if (hop_number>8 ) hop_number=8;}
+			//if (hop_number<1) {hop_number--;if (hop_number<0 ) hop_number=0;}
 			
 			if (hop_number==5 )	{grad=1;}
 			else if (hop_number==3) {grad=-1;} 
@@ -11727,7 +11732,9 @@ public void quantizeDownsampledBlock_R7(Block b, int[] hops,int[] result_YUV, in
 					e2=oc-color_aux;
 					if (e2<0) e2=-e2;
 					if (e2<emin) {hop_number=j;emin=e2;color=color_aux;
+					
 					//if (e2<4) break;
+					
 					}
 					else break;
 				}
@@ -11745,7 +11752,9 @@ public void quantizeDownsampledBlock_R7(Block b, int[] hops,int[] result_YUV, in
 					e2=color_aux-oc;
 					if (e2<0) e2=-e2;
 					if (e2<emin) {hop_number=j;emin=e2;color=color_aux;
+					
 					//if (e2<4) break;
+					
 					}
 					else break;
 				}

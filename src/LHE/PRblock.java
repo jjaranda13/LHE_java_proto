@@ -417,11 +417,20 @@ public int log2(int dato)
 		boolean dif_sign=true;//pos
 		//if (2>1) { System.out.println("hola");System.exit(0);}
 
+		
 		int q0=4;//6;//4;
 		int q1=8;//12;//10;
 		int q2=24;//18;//30;
 		int q3=72;//24;//80;
 		
+		/*
+		int q0=4;//6;//4;
+		int q1=8;//12;//10;
+		int q2=12;//18;//30;
+		int q3=64;//24;//80;
+		*/
+		boolean lum2=false;
+		float klum=0.25f;
 		for (int y=yini;y<=yfin;y++)
 		{
 			if (y>0)
@@ -430,7 +439,25 @@ public int log2(int dato)
 				
 				//lum_dif=0;//(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini])/divisor;
 				
-				int dif=(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini]);
+				int a=img.YUV[0][(y)*img.width+xini];
+				
+				
+				int b=img.YUV[0][(y-1)*img.width+xini];
+				
+				System.out.println ("a antes:"+a);
+				System.out.println ("a-b antes:"+(a-b));
+				if (lum2)
+				{
+				a=a-(int) (klum*(img.YUV[1][(y)*img.width+xini]-128));
+				b=b-(int) (klum*(img.YUV[1][(y-1)*img.width+xini]-128));
+				System.out.println ("U:"+img.YUV[1][(y)*img.width+xini]);
+				System.out.println ("a despues:"+a);
+				System.out.println ("a-b despues:"+(a-b));
+				
+				}
+				//int dif=(img.YUV[0][(y)*img.width+xini]-img.YUV[0][(y-1)*img.width+xini]);
+				int dif=(a-b);
+				
 				//System.out.println ("dif inicial:"+dif);
 				//last_lum_dif=dif/divisor;
 				
@@ -474,7 +501,21 @@ public int log2(int dato)
 				
 				int dif=0;
 				
-				if (x>0) dif=(img.YUV[0][(y)*img.width+x]-img.YUV[0][(y)*img.width+x-1]);
+				
+				//if (x>0) dif=(img.YUV[0][(y)*img.width+x]-img.YUV[0][(y)*img.width+x-1]);
+				if (x>0) 
+					{
+					int a =img.YUV[0][(y)*img.width+x];
+					
+					int b= img.YUV[0][(y)*img.width+x-1];
+					if (lum2)
+					{
+					a=a-(int)(klum*(img.YUV[1][(y)*img.width+x]-128));
+					b=b-(int)(klum*(img.YUV[1][(y)*img.width+x-1]-128));
+					}	
+					dif=(a-b);
+					}
+				
 				//System.out.println ("dif:"+dif+    " x="+x);	
 				//lum_dif=dif/divisor;
 				
@@ -512,7 +553,11 @@ public int log2(int dato)
 			//	if (lum_dif<=1) {divisor--; if (divisor<divisor_min) divisor=divisor_min;}
 			//	else divisor=10;
 				
-				if (lum_dif==0) continue; 
+			if (lum_dif==0) {
+				last_lum_dif=lum_dif;
+				last_lum_sign=lum_sign;
+				continue; //OJO PRLUM2    
+			}
 				
 				// hop value: -4....0....+4
 				//if (hop==0) continue; //h0 no sign
@@ -578,10 +623,15 @@ public int log2(int dato)
 				//last_hop=img.hops[0][(yini)*img.width+x-1]-4;
 				
 				//lum_dif=0;
-				
-				
-				int dif=(img.YUV[0][(yini)*img.width+x]-img.YUV[0][(yini)*img.width+x-1]);
-				
+				int a=img.YUV[0][(yini)*img.width+x];
+				int b=img.YUV[0][(yini)*img.width+x-1];
+				if (lum2)
+				{
+				a=a-(int)(klum*(img.YUV[1][(yini)*img.width+x]-128));
+				b=b-(int)(klum*(img.YUV[1][(yini)*img.width+x-1]-128));
+				}
+				//int dif=(img.YUV[0][(yini)*img.width+x]-img.YUV[0][(yini)*img.width+x-1]);
+				int dif=(a-b);
 				//last_lum_dif=dif/divisor;
 				//---------
 				dif_sign=(dif>=0);
@@ -625,7 +675,20 @@ public int log2(int dato)
 				//if (hop==0) continue; //h0 no sign
 				
 				int dif=0;
-				if (y>0)dif=(img.YUV[0][y*img.width+x]-img.YUV[0][(y-1)*img.width+x]);
+				//if (y>0)dif=(img.YUV[0][y*img.width+x]-img.YUV[0][(y-1)*img.width+x]);
+				
+				if (y>0)
+				{
+					int a=img.YUV[0][y*img.width+x];
+					int b=img.YUV[0][(y-1)*img.width+x];
+					if (lum2)
+					{	
+					a=a-(int)(klum*(img.YUV[1][y*img.width+x]-128));
+					b=b-(int)(klum*(img.YUV[1][(y-1)*img.width+x]-128));
+					}
+					
+					dif=(a-b);
+				}
 	            
 				//---------------
 				dif_sign=(dif>=0);
@@ -659,7 +722,11 @@ public int log2(int dato)
 				//if (lum_dif<=1) {divisor--; if (divisor<divisor_min) divisor=divisor_min;}
 				//else divisor=10;
 				
-				 if (lum_dif==0) continue; 
+				 if (lum_dif==0) {
+					 last_lum_dif=lum_dif;
+					 last_lum_sign=lum_sign;
+					 continue;// OJO PRlum2 
+				 }
 				
 				//hop_sign=(hop>=0);//NUEVO 19/3/2015
 				lum_sign=(lum_dif>=0);
@@ -720,6 +787,8 @@ public int log2(int dato)
 		if (PRx>umbral) PRx=0.5f;//1;
 		if (PRy>umbral) PRy=0.5f;//1;
 		
+		//PRx=0.2f;
+		//PRy=0.2f;
 		//PRx=1-PRx;
 		//PRy=1-PRy;
 		

@@ -141,7 +141,7 @@ public float[] compressBasicFrame(String optionratio)
 	//lhe.quantizeOneHopPerPixel_improved(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_R5_improved(img.hops[0],img.LHE_YUV[0]);
 	//lhe.quantizeOneHopPerPixel_R6(img.hops[0],img.LHE_YUV[0]);
-		lhe.quantizeOneHopPerPixel_R7(img.hops[0],img.LHE_YUV[0]);
+	lhe.quantizeOneHopPerPixel_R7(img.hops[0],img.LHE_YUV[0]);
 	
 	
 	//lhe.quantizeOneHopPerPixel_improved02(img.hops[0],img.LHE_YUV[0]);
@@ -212,8 +212,74 @@ public float[] compressBasicFrame(String optionratio)
 	
 	result[1]=(float)lenbin/(img.width*img.height);
 	
+	System.out.println("");
+	computeMutual(img.hops[0], img.width*img.height);
+	
+	
+	
 	return result;
 }
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void computeMutual(int[] hops, int len)
+{
+	int l2=0;
+	int l1=0;
+	int a,b, c;
+	
+	int[] lenbin=new int[9];
+	lenbin[0]=8;
+	lenbin[1]=7;
+	lenbin[2]=5;
+	lenbin[3]=3;
+	lenbin[4]=1;
+	lenbin[5]=2;
+	lenbin[6]=4;
+	lenbin[7]=6;
+	lenbin[8]=8;
+	
+	int[] nhops=new int[len];
+	
+	
+	for (int i=0 ; i<len ;i+=2)
+	{
+		a=lenbin[hops[i]];
+		b=lenbin[hops[i+1]];
+		l1=l1+a+b;
+		
+		c=(a-1) | (b-1);
+		
+		int k=0;
+		switch (c)
+		{
+		case 0: k=1; break;
+		case 1: k=2+1;break;
+		case 2: k=3+1;break;
+		case 3: k=4+2;break;
+		case 4: k=5+1;break;
+		case 5: k=6+2;break;
+		case 6: k=7+2;break;
+		case 7: k=8+3;break;
+		case 8: k=8+1;break;
+		}
+		l2+=k;
+		
+		
+		
+		
+		
+	}
+	System.out.println("Results after entropic MUTUAL info :");
+	System.out.println("==========================");
+	
+	int len3=img.width*img.height;
+	System.out.println ("old len "+l1+" bits -->" +((float)l1/(float)len3)+" bpp");
+	System.out.println ("nueva len "+l2+" bits -->" +((float)l2/(float)len3)+" bpp");
+	
+	
+	
+	
+}
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 public float[] compressSIMPLELHE()
 {
@@ -542,7 +608,42 @@ public float[] compressFrame(float ql)
 				Block bi=grid.bl[y][x];
 				
 				//adapt corner's PPP to rectangle shape
+				
 				bi.pppToRectangleShape();
+				
+				//voy a ajustar los adyacentes para reducir distancias entre PPP . 2018/06/13
+				//if (false)
+				if ( /*false && */ x<grid.number_of_blocks_H-1 &&  y<grid.number_of_blocks_V-1)
+				{
+					if (bi.ppp[0][1]<grid.bl[y][x+1].ppp[0][0])
+					grid.bl[y][x+1].ppp[0][0]=(bi.ppp[0][1]+grid.bl[y][x+1].ppp[0][0])/2;
+					
+					if (bi.ppp[1][1]<grid.bl[y][x+1].ppp[1][0])
+					grid.bl[y][x+1].ppp[1][0]=(bi.ppp[1][1]+grid.bl[y][x+1].ppp[1][0])/2;
+					
+					if (bi.ppp[0][3]<grid.bl[y][x+1].ppp[0][2])
+					grid.bl[y][x+1].ppp[0][2]=(bi.ppp[0][3]+grid.bl[y][x+1].ppp[0][2])/2;
+					
+					if (bi.ppp[1][3]<grid.bl[y][x+1].ppp[1][2])
+					grid.bl[y][x+1].ppp[1][2]=(bi.ppp[1][3]+grid.bl[y][x+1].ppp[1][2])/2;
+					
+					
+					if (bi.ppp[0][2]<grid.bl[y+1][x].ppp[0][0])
+					grid.bl[y+1][x].ppp[0][0]=(bi.ppp[0][2]+grid.bl[y+1][x].ppp[0][0])/2;
+					
+					if (bi.ppp[1][2]<grid.bl[y+1][x].ppp[1][0])
+					grid.bl[y+1][x].ppp[1][0]=(bi.ppp[1][2]+grid.bl[y+1][x].ppp[1][0])/2;
+					
+					if (bi.ppp[0][3]<grid.bl[y+1][x].ppp[0][1])
+					grid.bl[y+1][x].ppp[0][1]=(bi.ppp[0][3]+grid.bl[y+1][x].ppp[0][1])/2;
+					
+					if (bi.ppp[1][3]<grid.bl[y+1][x].ppp[1][1])
+					grid.bl[y+1][x].ppp[1][1]=(bi.ppp[1][3]+grid.bl[y+1][x].ppp[1][1])/2;
+					
+					
+				}
+				
+				
 
 				//downsampling the block
 				//bi.computeDownsampledLengths();

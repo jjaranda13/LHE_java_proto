@@ -51,6 +51,8 @@ public class ImgUtil {
 	public int[][] YUV; 
 
 
+	public int[][] LC; 
+	public int[][] lc_cache_colorLC;
 
 	//image after load or before save
 	public BufferedImage img=null;
@@ -131,6 +133,10 @@ public class ImgUtil {
 	//funcionalidad de diferencia entre 2 frames 
 	int[] dif;
 		
+	
+	//experimental nuevo color model
+	public int[][] YCD;// 
+	int[] cs;//cache sumas
 	//******************************************************************************
 	public ImgUtil()
 	{}
@@ -1046,6 +1052,242 @@ height=orig.height;
 	}	
 
 	//*******************************************************************************
+	//******************************************************************************
+			public void lc_LCtoBMP(String pathImagen)
+			{
+				
+				BufferedImage buff_c=lc_LCtoImg();
+				saveBufferedImage(pathImagen, buff_c);
+				
+				//for (int i=0;i<10;i++) System.out.println("Y[i]:"+Y[i]+" , U[i]:"+U[i]+" ,V[i]"+V[i] );
+
+			}
+			//******************************************************************************
+
+	//******************************************************************************
+		public void lc_BMPtoLC(String pathImagen)
+		{
+			System.out.println("loading: "+pathImagen);
+			loadImageToBufferedImage(pathImagen);
+			lc_imgToLC_test();
+
+			//for (int i=0;i<10;i++) System.out.println("Y[i]:"+Y[i]+" , U[i]:"+U[i]+" ,V[i]"+V[i] );
+
+		}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		public BufferedImage lc_LCtoImg()
+		{
+			img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+			for (int y=0;y<height;y++)  {
+				for (int x=0;x<width;x++)  {
+
+					//the set of formulas must be coherent with formulas used for RGB->YUV
+					int i=x+(y)*width;
+					
+					int luz=LC[0][i];
+					int color=LC[1][i];
+					int rgb=lc_cache_colorLC[luz][color];
+					img.setRGB(x, y, rgb);
+					
+
+				}//x
+			}//y
+			return img;
+		}
+		
+		
+		//******************************************************************************
+			
+	private void lc_imgToLC() {
+
+		width=img.getWidth(); 
+		height=img.getHeight(); 
+
+		
+		LC=new int[2][width*height];
+		
+		
+		//this bucle converts BufferedImage object ( which is "img") into YUV array (luminance and chrominance)
+		int i=0;
+		for (int y=0;y<height;y++)  {
+			for (int x=0;x<width;x++)  {
+				int c=img.getRGB(x, y);
+
+				int red=(c & 0x00ff0000) >> 16;
+			int green=(c & 0x0000ff00) >> 8;
+			int blue=(c & 0x000000ff);
+
+			//identical formulas used in JPEG . model YCbCr (not pure YUV)
+			/*
+			YUV[0][i]=(red*299+green*587+blue*114)/1000; //lumminance [0..255]
+			YUV[1][i]=128+(-168*red - 331*green + 500*blue)/1000; //chroma U [0.255]
+			YUV[2][i]=128+ (500*red - 418*green -81*blue)/1000; //chroma V [0..255]
+
+			if (YUV[0][i]>255) YUV[0][i]=255;
+			if (YUV[1][i]>255)  YUV[1][i]=255;
+			if (YUV[2][i]>255)  YUV[2][i]=255;
+			 
+			if (YUV[0][i]<0) YUV[0][i]=0;
+			if (YUV[1][i]<0)  YUV[1][i]=0;
+			if (YUV[2][i]<0)  YUV[2][i]=0;
+			*/
+			
+			LC[0][i]=Math.min(red,Math.min(green,blue));
+			LC[1][i]=
+			
+			i++;	
+			}
+		}
+
+
+	}	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	//*******************************************************************************
+
+		private void lc_imgToLC_test() {
+
+			width=img.getWidth(); 
+			height=img.getHeight(); 
+
+			lc_cache_colorLC=new int[256][256];
+			LC=new int[2][width*height];
+			
+			
+			
+			
+			
+			//this bucle converts BufferedImage object ( which is "img") into YUV array (luminance and chrominance)
+			int i=0;
+			
+			for (int y=0;y<height;y++)  {
+				
+				//reseteo aqui
+				int luz=y%256;
+				
+				
+				int color=0;
+				
+				int red=luz;// 
+				int green=luz;
+				int blue=luz;
+				int tope=255;
+				//int step=(int)(((float)((tope-1)-luz))/6.3f);
+				int step=(int)(((tope-1)-luz)/5);
+				boolean pintar=true;
+				int estado=0;
+				System.out.println("step: "+step);
+				for (int x=0;x<width;x++)  {
+					
+				//red=unidades, green =decenas, blue=centenas...algo asi	
+				/*	
+				//partimos de rojo =max, green=min, blue=min	
+				if (estado==0)	
+				 {
+					green+=step;
+					if (green>=255) {green=255; estado=1;}
+					//acaba en amarillo brillante ( R+G= amarillo)
+				 }
+				//cuando R y G llegan al max, empezamos a reducir R y a subir B
+				else if (estado==1)
+				{
+					red=red-step;	if (red<luz) {red=luz; estado=2;}
+					//blue+=step;
+					//if (blue>255) {blue=255; estado=2;}
+					//if (red==luz && blue==255) estado=2;
+					//System.out.println("y:"+y+"  r:"+red+" g:"+green+" b:"+blue);
+				}	
+				else if (estado==2)// red==luz
+				//blue  se queda arriba y baja G	
+				{
+					//pintar=false;
+					blue+=step;
+					if (blue>255) {blue=255; estado=3;}
+					//red-=step;	if (red<luz) {red=luz;}
+					//green-=step;
+					//if (green<luz) {green=luz; estado=3;}
+					
+					
+				}
+				else if (estado==3)
+				//vamos apagando blue
+				{//pintar=false;
+				  green-=step;
+			  	 if (green<luz) {green=luz; estado=4;}
+				
+					//blue-=step;
+					//if (blue<luz) blue=luz;
+				}
+				else if (estado==4)
+				{
+					//pintar=false;
+					//blue-=step;
+					//if (blue<luz) {blue=luz; pintar=false;}
+					red+=step;
+					if (red>255) {red=255; estado=5;}
+				}
+				if (estado==5)
+				{
+					blue-=step;
+					red-=step;
+					if (red<luz) {red=luz; }
+					if (blue<luz) {blue=luz; pintar=false;}
+				}
+				*/
+				//luz=Math.min(red,Math.min(green,blue));
+				//if (luz<0) luz=0;
+				//if (luz>255) luz=255;
+				
+				//if (red<luz) red=luz;
+				//if (green<luz) green=luz;
+				//if (blue<luz) blue=luz;
+				
+				//if (red>255) red=255;
+				//if (green>255) green=255;
+				//if (blue>255) blue=255;
+				
+				if (color>255) pintar=false;
+				//luz=Math.min(red,Math.min(green,blue));
+				
+				//int luz=y % 255;
+				if (pintar)
+				 {
+				  LC[0][i]=luz;//Math.min(red,Math.min(green,blue));
+				  LC[1][i]=color;
+				  
+				  int rgb=red*65536+green*256+blue;
+				  //int rgb=red+green*256+blue*65536;
+				  
+				  lc_cache_colorLC[luz][color]=rgb;
+				  color++;
+				 }	
+				else 
+				{
+					LC[0][i]=0;//Math.min(red,Math.min(green,blue));
+					LC[1][i]=0;
+					  
+				}
+						
+				i++;
+				red+=step;
+				if (red>=tope) {
+					red=luz;
+					green+=step;
+					if (green>=tope)
+					{
+						green=luz;
+						blue+=step;
+						if (blue>=tope) pintar=false;
+					}
+				}
+				
+				}
+			}
+
+
+		}	
+		
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	private BufferedImage intToImg(int[] component) {
 
 		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
@@ -4708,5 +4950,2238 @@ public void copy(int[] orig, int[] des)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+//%%%%%%%%%%%%%%%%%%%%%% COMPRESS DOMAIN IMAGE ANALYSIS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public  void CDA_edgeDetection_v001(String pathImagen, int hop_threshold, boolean black) {
+
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=0;y<height;y++)  {
+			for (int x=0;x<width;x++)  {
+
+				//the set of formulas must be coherent with formulas used for RGB->YUV
+				int i=x+(y)*width;
+				/*
+				int red=component[i];//+(1402*(V[i]-128))/1000;
+				int green=component[i];//- (334*(U[i]-128)-714*(V[i]-128))/1000;
+				int blue=component[i];//+(177*(U[i]-128))/1000;
+				 */
+				int k=30;// 30*4=120--> 128+120=248
+				int offset=128;
+				int hop=hops[0][i]-4;
+				
+				if (black) 
+					{hop=Math.abs(hop);
+				     k=60;
+				     offset=0;
+					}
+				
+				if (Math.abs(hop)<hop_threshold) hop=0;
+				int red =offset+k*(hop);
+				int green=red;
+				int blue=red;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+
+			}//x
+		}//y
+		
+		//BufferedImage buff_c=intToImg(component);
+		saveBufferedImage(pathImagen, img);
+		
+		//return img;
+	}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public  void CDA_blur_v001(String pathImagen, int hop_threshold) {
+
+			img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+			for (int y=0;y<height;y++)  {
+				for (int x=0;x<width;x++)  {
+
+					//the set of formulas must be coherent with formulas used for RGB->YUV
+					int i=x+(y)*width;
+					
+					
+					int lum =LHE_YUV[0][i];
+					
+					/*
+					int red=LHE_YUV[0][i];//+(1402*(V[i]-128))/1000;
+					int green=LHE_YUV[0][i];//- (334*(U[i]-128)-714*(V[i]-128))/1000;
+					int blue=LHE_YUV[0][i];//+(177*(U[i]-128))/1000;
+					 */
+					
+					
+					int hop=hops[0][i]-4;
+					hop=Math.abs(hop);
+					if (Math.abs(hop)>=hop_threshold) 
+						{
+						if (x>0 && y>0)
+							lum=(lum+LHE_YUV[0][i-1]+LHE_YUV[0][i-width])/3;
+						
+						}
+					
+					int red =lum;
+					int green=lum;
+					int blue=lum;
+					
+					int rgb=red+green*256+blue*65536;
+					img.setRGB(x, y, rgb);
+
+				}//x
+			}//y
+			
+			//BufferedImage buff_c=intToImg(component);
+			saveBufferedImage(pathImagen, img);			
+			//return img;
+ }	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void CDA_sharpen_v001(String pathImagen, int hop_threshold) {
+
+		int counter=0;
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=0;y<height;y++)  {
+			for (int x=0;x<width;x++)  {
+				
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+				
+				
+				int hop=hops[0][i]-4;
+				//hop=Math.abs(hop);
+				if (Math.abs(hop)>=hop_threshold) 
+					{
+					if (x>0 && y>0)
+						//lum=(lum+LHE_YUV[0][i-1]+LHE_YUV[0][i-width])/3;
+					{
+						if (hop>0) {lum=lum+(int)(lum*0.4f);if (lum>255) lum=255;}
+						if (hop<0) {lum=lum -(int)(lum*0.4f);if (lum<0) lum=0;}
+						
+						lum=(lum+ LHE_YUV[0][i])/2;
+						counter++;
+						
+					}
+					}
+				
+				int red =lum;
+				int green=red;
+				int blue=red;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+				
+				
+			}//x
+			}//y
+		saveBufferedImage(pathImagen, img);
+		System.out.println("counter: "+counter);
+}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		public void CDA_identity_v001(String pathImagen) {
+
+			int counter=0;
+			img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+			for (int y=0;y<height;y++)  {
+				for (int x=0;x<width;x++)  {
+					
+					int i=x+(y)*width;
+					
+					
+					int lum =LHE_YUV[0][i];
+					
+					
+					
+					int red =lum;
+					int green=red;
+					int blue=red;
+					
+					int rgb=red+green*256+blue*65536;
+					img.setRGB(x, y, rgb);
+					
+					
+				}//x
+				}//y
+			saveBufferedImage(pathImagen, img);
+			System.out.println("counter: "+counter);
+	}
+		
+		
+		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void CDA_denoise_v001(String pathImagen, int hop_threshold) {
+
+			int counter=0;
+			
+			int[] lum_buffer= new int[width*height];
+			float[] kernel={1f,1f,1f,
+							1f,1f,1f,
+							1f,1f,1f};
+					
+			img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+			for (int y=0;y<height;y++)  {
+				for (int x=0;x<width;x++)  {
+					
+					int i=x+(y)*width;
+					
+					lum_buffer[i]=LHE_YUV[0][i];
+					//int lum =LHE_YUV[0][i];
+					int lum=lum_buffer[i];
+					
+					
+					
+					if (x>0 && y>0 && y <height-1 && x<width-1)
+					{	
+						
+					//int last_hop=hops[0][i-1]-4;
+					int hop=hops[0][i]-4;
+					//int next_hop=hops[0][i+1]-4;
+					
+					if (Math.abs(hop)>=4)
+						{
+							counter++;
+							//lum =(lum_buffer[i-1]+lum_buffer[i-width+1])/2;
+							lum =selective_Kernel(x,y,kernel,-3,3);
+							
+							
+							lum_buffer[i]=lum;
+							
+						}
+						
+					
+						
+					}
+					int red =lum;
+					int green=red;
+					int blue=red;
+					
+					int rgb=red+green*256+blue*65536;
+					img.setRGB(x, y, rgb);
+					
+					
+				}//x
+				}//y
+			saveBufferedImage(pathImagen, img);
+			//System.out.println("counter: "+counter);
+			System.out.println("denoise counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+	}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public int selective_Kernel(int xo, int yo, float kernel[], int hmin, int hmax)
+{	
+	int i=0;// kernel index
+    int k=0;//counter of summation
+    float resultf=0;
+	for (int y=yo-1;y<=yo+1;y++)  {
+		for (int x=xo-1;x<=xo+1;x++,i++)  {
+			int pix=x+(y)*width;// pixel position
+			int p=LHE_YUV[0][pix]; //pixel color
+			int h=hops[0][pix]-4;//hop assotiated to pixel
+			if (h>=hmin && h<=hmax )
+			  {
+			  resultf=resultf +(float)p*kernel[i];
+			  k+=kernel[i];//ocunter of summation
+			  }			
+		  }//x
+		}//y
+	if (k>0) resultf=resultf/k;
+	//else resultf=LHE_YUV[0][xo+(yo)*width];
+	
+	if (resultf>255) resultf=255;
+	else if (resultf<=0 ) resultf=0;//255;
+	
+	return (int)resultf;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void CDA_sharpen_v002(String pathImagen, int hop_threshold) {
+
+		int counter=0;
+		float[] kernel=
+			   {0f,-1f,0f,
+				-1f,5f,-1f,
+				0f,-1f,0f};
+		
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=1;y<height-1;y++)  {
+			for (int x=1;x<width-1;x++)  {
+				
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+				
+				
+				int hop=hops[0][i]-4;
+				//hop=Math.abs(hop);
+				if (Math.abs(hop)>=hop_threshold) 
+					{
+						lum =selective_Kernel(x,y,kernel,-4,4);
+						counter++;
+					}
+				
+				int red =lum;
+				int green=red;
+				int blue=red;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+				
+				
+			}//x
+			}//y
+		saveBufferedImage(pathImagen, img);
+		System.out.println("sharpen counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public  void CDA_blur_v002(String pathImagen, int hop_threshold) {
+
+		
+		int counter=0;
+		float[] kernel=
+			   {1f,1f,1f,
+				1f,1f,1f,
+				1f,1f,1f};
+		
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=1;y<height-1;y++)  {
+			for (int x=1;x<width-1;x++)  {
+
+				//the set of formulas must be coherent with formulas used for RGB->YUV
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+			
+				
+				
+				int hop=hops[0][i]-4;
+				hop=Math.abs(hop);
+				if (Math.abs(hop)>=hop_threshold) 
+					{
+					if (x>0 && y>0)
+						//lum=(lum+LHE_YUV[0][i-1]+LHE_YUV[0][i-width])/3;
+					lum=selective_Kernel(x,y,kernel,-4,4);
+					    counter++;
+					}
+				
+				int red =lum;
+				int green=lum;
+				int blue=lum;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+
+			}//x
+		}//y
+		
+		//BufferedImage buff_c=intToImg(component);
+		saveBufferedImage(pathImagen, img);			
+		//return img;
+		System.out.println("blur counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+}	
+
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public  void CDA_beauty_v001(String pathImagen, int hop_threshold) {
+
+		
+		int counter=0;
+		float[] kernel=
+			   {2f,1f,2f,
+				1f, 0f,1f,
+				2f,1f,2f};
+		
+		float[] kernelsharp=
+			   {0f,-1f,0f,
+				-1f,5f,-1f,
+				0f,-1f,0f};
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=1;y<height-1;y++)  {
+			for (int x=1;x<width-1;x++)  {
+
+				//the set of formulas must be coherent with formulas used for RGB->YUV
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+			
+				
+				
+				int hop=hops[0][i]-4;
+				hop=Math.abs(hop);
+				if (Math.abs(hop)>=hop_threshold) 
+					{
+					//if (x>0 && y>0)
+						//lum=(lum+LHE_YUV[0][i-1]+LHE_YUV[0][i-width])/3;
+					//lum=selective_Kernel(x,y,kernel,-1,1);
+					//selective_Kernel(x,y,kernelsharp,-4,4);
+					    //counter++;
+					}
+				else {
+					lum=selective_Kernel(x,y,kernel,-4,4);
+					counter++;
+				}
+				
+				int red =lum;
+				int green=lum;
+				int blue=lum;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+
+			}//x
+		}//y
+		
+		//BufferedImage buff_c=intToImg(component);
+		saveBufferedImage(pathImagen, img);			
+		//return img;
+		System.out.println("clean counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+}		
+	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void CDA_emboss_v001(String pathImagen, int hop_threshold) {
+
+		int counter=0;
+		float[] /*kernel=
+			   {0f,0f,0f,
+				0f,5f,0f,
+				0f,0f,-4f};
+		*/
+		 kernel=
+			   { 0f,0f,0f,
+				 0f,5f,0f,
+				 0f,0f,-4f};
+		
+		
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=1;y<height-1;y++)  {
+			for (int x=1;x<width-1;x++)  {
+				
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+				
+				
+				int hop=hops[0][i]-4;
+				hop=Math.abs(hop);
+				if (Math.abs(hop)>=hop_threshold) 
+					{
+						lum =selective_Kernel(x,y,kernel,-4,4);
+						counter++;
+					}
+				
+				
+				int red =lum;
+				int green=red;
+				int blue=red;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+				
+				
+			}//x
+			}//y
+		saveBufferedImage(pathImagen, img);
+		System.out.println("emboss counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+}
+	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
+	public void CDA_emboss_v002(String pathImagen,int hop_threshold) {
+
+		int counter=0;
+		
+		int inc=10;
+		img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+		for (int y=1;y<height-1;y++)  {
+			for (int x=1;x<width-1;x++)  {
+				
+				int i=x+(y)*width;
+				
+				
+				int lum =LHE_YUV[0][i];
+				
+				
+				int lum_ant=lum; 
+				
+				
+				int hop=hops[0][i]-4;
+				
+				if (hop>=2) lum=255;
+				//if (hop==1) lum=225;//128;//192;
+				
+				//if (hop==-1) lum=32;//64;
+				
+				lum=128 +hop*hop*10;
+				if (Math.abs(hop)>0)
+				lum=(lum+LHE_YUV[0][i])/2;
+				else lum=LHE_YUV[0][i];
+				
+				if (Math.abs(hop)>=0) lum=LHE_YUV[0][i]+lum;
+				else lum=LHE_YUV[0][i];
+				/*
+				if (hop>0)
+				lum=-2*LHE_YUV[0][i]/(Math.abs(hop));
+				else if (hop<0)
+				lum=2*LHE_YUV[0][i]/(Math.abs(hop));
+				else 
+				*/	
+				hop=hops[0][i]-4;
+				lum=LHE_YUV[0][i];
+				if (Math.abs(hop)>1)
+				lum=(LHE_YUV[0][i]*hop)+(LHE_YUV[0][i]);	
+				
+				if (lum>255) lum=255;
+				if (lum<0) lum=0;
+				int red =lum;
+				int green=red;
+				int blue=red;
+				
+				int rgb=red+green*256+blue*65536;
+				img.setRGB(x, y, rgb);
+				
+				
+			}//x
+			}//y
+		
+		
+		saveBufferedImage(pathImagen, img);
+		System.out.println("emboss2 counter: "+counter+ "  --> "+100*counter/(width*height)+" %");
+		
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void interpol_edgedetection(String pathImagen)
+{
+	int counter=0;
+	img= new BufferedImage (width*2,height*2,BufferedImage.TYPE_INT_RGB);
+	for (int y=0;y<height*2;y++)  {
+		for (int x=0;x<width*2;x++)  {
+			
+			int x2=x/2;
+			int y2=y/2;
+			int i2=x2+(y2)*width;
+			
+			int lum =0;//LHE_YUV[0][i2];
+			int hop=0;//hops[0][i2]-4;
+			
+			if (x%2==0 && y%2==0)
+			{
+				lum =LHE_YUV[0][i2];
+				hop=hops[0][i2]-4;
+			}
+			else
+			
+			if ( x/2>0 && x/2<width-1 && y/2>0 && y/2<height-1)
+				{
+			//diagonal	
+				if ( x%2!=0 && y%2!=0){
+			    int a=LHE_YUV[0][i2];
+				int b=LHE_YUV[0][i2+1];
+				int c=LHE_YUV[0][i2+width];
+				int d=LHE_YUV[0][i2+1+width];
+				
+				int difad=Math.abs(a-d);
+				int difbc=Math.abs(b-c);
+				if (difad>=difbc) lum=(b+c)/2;
+				else lum=(a+d)/2;
+				//lum=0;
+				
+			  }
+			  else
+			  //	
+			  {
+				    int a=LHE_YUV[0][i2];
+					int b=LHE_YUV[0][i2+1];
+					int c=LHE_YUV[0][i2+width];
+					int d=LHE_YUV[0][i2];
+					
+					int difac=Math.abs(a-c);
+					int difbd=Math.abs(b-d);
+					if (difac>=difbd) lum=(b+d)/2;
+					else   lum=(a+c)/2;
+					//else lum=(a+b)/2;
+					lum=0;
+			  }
+				
+				
+			}//else interpol
+			if (lum>255) lum=255;
+			if (lum<0) lum=0;
+			int red =lum;
+			int green=red;
+			int blue=red;
+			
+			int rgb=red+green*256+blue*65536;
+			img.setRGB(x, y, rgb);	
+		}//x
+	}//Y
+	
+	for (int y=0;y<height*2;y++)  {
+		for (int x=0;x<width*2;x++)  {
+			
+			
+			
+
+			int lum=getlum(img,x,y);
+			
+			if ( x>0 && x<width*2-1 && y>0 && y<height*2-1 && lum==0)
+				
+			  
+			  //	
+			  {
+				    int a=getlum(img,x,y-1);
+					int b=getlum(img,x+1,y);
+					int c=getlum(img,x,y+1);
+					int d=getlum(img,x-1,y);
+					
+					int difac=Math.abs(a-c);
+					int difbd=Math.abs(b-d);
+					if (difac>=difbd) lum=(b+d)/2;
+					else   lum=(a+c)/2;
+					//else lum=(a+b)/2;
+					//lum=0;
+			  //}
+				
+				
+			//}//else interpol
+			if (lum>255) lum=255;
+			if (lum<0) lum=0;
+			int red =lum;
+			int green=red;
+			int blue=red;
+			
+			int rgb=red+green*256+blue*65536;
+			img.setRGB(x, y, rgb);
+			  }
+		}//x
+	}//Y
+	
+	saveBufferedImage(pathImagen, img);
+}
+public int getlum(BufferedImage img,int x, int y)
+{
+	int c=img.getRGB(x, y);
+
+	int lum=(c & 0x00ff0000) >> 16;
+    //int green=(c & 0x0000ff00) >> 8;
+    //int blue=(c & 0x000000ff);
+return lum;	
+	
+	
+}
+
+public void CDVA_PRimage_v001(Grid grid, String pathImagen){
+	img= new BufferedImage (33,33,BufferedImage.TYPE_INT_RGB);
+	for (int y=0;y<33;y++)  {
+		for (int x=0;x<33;x++)  {
+	
+			
+			int k=25;// 30*4=120--> 128+120=248
+			int offset=0;
+			
+			//PR varia entre 0.0 y 1, siendo los valores 0.0 - 0.125 - 0.25 - 0.5 - 1.0
+			float pr=10*(grid.prbl[y][x].PRx+grid.prbl[y][x].PRy)/2.0f;
+			
+			//float pr=10*(Math.max(grid.prbl[y][x].PRx,grid.prbl[y][x].PRy));
+			
+			
+			//System.out.println ("PR:"+grid.prbl[y][x].PRx);
+			
+			int red =offset+k*(int)pr;
+			
+			if (red>255) red=255;
+			if (red<0) red=0;		
+			
+			int green=red;
+			int blue=red;
+			
+			
+			int rgb=red+green*256+blue*65536;
+			img.setRGB(x, y, rgb);
+			
+		}
+	}
+	saveBufferedImage(pathImagen, img);
+}
+
+
+public void CDVA_PRdif_image_v001(String pathImagen, String pathReferenceImagen,String pathResultImagen){
+	
+	loadImageToBufferedImage(pathReferenceImagen);
+	
+	BufferedImage img_ref=null;
+	BufferedImage img=null;
+	try {	
+		img_ref = ImageIO.read(new File(pathReferenceImagen));
+	} catch (IOException e) {
+		System.out.println("error loading image");
+		System.exit(0);
+	}
+	
+	
+	try {	
+		img = ImageIO.read(new File(pathImagen));
+	} catch (IOException e) {
+		System.out.println("error loading image");
+		System.exit(0);
+	}
+	
+	//imgToInt();//width & height calculado
+	BufferedImage img_result= new BufferedImage (33,33,BufferedImage.TYPE_INT_RGB);
+	
+	for (int y=0;y<33;y++)  {
+		for (int x=0;x<33;x++)  {
+	
+			
+			int c=img_ref.getRGB(x, y);
+
+			int red=(c & 0x00ff0000) >> 16;
+	  	    int green=(c & 0x0000ff00) >> 8;
+		    int blue=(c & 0x000000ff);
+			
+
+		    int c2=img.getRGB(x, y);
+
+			int red2=(c2 & 0x00ff0000) >> 16;
+	  	    int green2=(c2 & 0x0000ff00) >> 8;
+		    int blue2=(c2 & 0x000000ff);
+
+		    if (red2<red) red2=red;
+		    
+		    int red3= 128+(red2-red)/2;
+		    int green3=red3;
+			int blue3=red3;	
+		    
+		    
+			
+			
+			int rgb=red3+green3*256+blue3*65536;
+			img_result.setRGB(x, y, rgb);
+			
+		}
+	}
+	saveBufferedImage(pathResultImagen, img_result);
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void RGBtoYCD(String pathImagen)
+{
+	System.out.println("loading: "+pathImagen);
+	loadImageToBufferedImage(pathImagen);
+	
+	System.out.println ("imagen cargada");
+	
+	imgToYCD();
+
+	//for (int i=0;i<10;i++) System.out.println("Y[i]:"+Y[i]+" , U[i]:"+U[i]+" ,V[i]"+V[i] );
+
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void RGBto8(String pathImagen)
+{
+	System.out.println("loading: "+pathImagen);
+	loadImageToBufferedImage(pathImagen);
+	
+	System.out.println ("imagen cargada");
+	
+	imgTo8();
+	//imgTo8v002();
+
+	//for (int i=0;i<10;i++) System.out.println("Y[i]:"+Y[i]+" , U[i]:"+U[i]+" ,V[i]"+V[i] );
+
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void RGBto8v002(String pathImagen)
+{
+	System.out.println("loading: "+pathImagen);
+	loadImageToBufferedImage(pathImagen);
+	
+	System.out.println ("imagen cargada");
+	
+	//imgTo8();
+	//imgTo8v002();
+	//imgTo8v003();
+	imgTo8v004();
+	//imgTo8v005();
+	//for (int i=0;i<10;i++) System.out.println("Y[i]:"+Y[i]+" , U[i]:"+U[i]+" ,V[i]"+V[i] );
+
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgToYCD() {
+   
+	System.out.println ("enter in img to YCD");
+	width=img.getWidth(); 
+	height=img.getHeight(); 
+
+	YCD=new int[3][width*height];
+	
+	int r_old=0;
+	int g_old=0;
+	int b_old=0;
+	
+	//this bucle converts BufferedImage object ( which is "img") into YUV array (luminance and chrominance)
+	int i=0;
+	for (int y=0;y<height;y++)  {
+		for (int x=0;x<width;x++)  {
+		
+			
+		int c=img.getRGB(x, y);
+
+		int r=(c & 0x00ff0000) >> 16;
+		int g=(c & 0x0000ff00) >> 8;
+		int b=(c & 0x000000ff);
+
+		//identical formulas used in JPEG . model YCbCr (not pure YUV)
+		YCD[0][i]=(r+g+b)/3; //lumminance [0..255]
+		/*
+		if (x%3==0)	{YCD[1][i]=128+(red - r_old)/2;r_old=r_old+(YCD[1][i]-128)/2;}//g_old=3*YCD[0][i]-r_old-b_old;b_old=3*YCD[0][i]-r_old-g_old;}
+		if (x%3==1)	{YCD[1][i]=128+(green - g_old)/2;g_old=green;r_old=3*YCD[0][i]-g_old-b_old;g_old=3*YCD[0][i]-r_old-g_old;}
+		if (x%3==2)	{YCD[1][i]=128+(blue - b_old)/2;b_old=blue;r_old=3*YCD[0][i]-g_old-b_old;g_old=3*YCD[0][i]-r_old-b_old;}
+*/
+		
+		
+		if (x%3==0)	{
+			YCD[1][i]=(r-r_old)/2+128;
+			r_old=(YCD[1][i]-128)*2+r_old;
+			
+			YCD[1][i]=r;
+			r_old=r;
+			int d=(3*YCD[0][i]-r_old-g_old-b_old ); //desviacion a repartir
+			float f= (float)(g_old)/(float)(g_old+b_old+1);
+			g_old=g_old+(int)((float)d*f);
+			b_old=b_old+(int)((float)d*(1-f));
+			//g_old=g_old+d/2; 
+			//b_old=b_old+d/2;
+		
+		}
+		if (x%3==1)	{
+			YCD[1][i]=(g-g_old)/2+128;
+			g_old=(YCD[1][i]-128)*2+g_old;
+			
+			YCD[1][i]=g;
+			g_old=g;
+		
+		int d=(3*YCD[0][i]-r_old-g_old-b_old )/2; //desviacion a repartir
+		r_old=r_old+d; 
+		b_old=b_old+d;}
+		
+		if (x%3==2)	{
+			YCD[1][i]=(b-b_old)/2+128;
+			b_old=(YCD[1][i]-128)*2+b_old;
+			
+			YCD[1][i]=b;
+			b_old=b;
+		int d=(3*YCD[0][i]-r_old-g_old-b_old )/2; //desviacion a repartir
+		
+		g_old=g_old+d; 
+		r_old=r_old+d;}
+        
+		
+		if (YCD[0][i]>255) YCD[0][i]=255;
+		if (YCD[1][i]>255)  YCD[1][i]=255;
+		if (YCD[2][i]>255)  YCD[2][i]=255;
+
+		if (YCD[0][i]<0) YCD[0][i]=0;
+		if (YCD[1][i]<0)  YCD[1][i]=0;
+		if (YCD[2][i]<0)  YCD[2][i]=0;
+		
+		if (r_old>255) r_old=255;
+		if (g_old>255) g_old=255;
+		if (b_old>255) b_old=255;
+		
+		if (r_old<0) r_old=0;
+		if (g_old<0) g_old=0;
+		if (b_old<0) b_old=0;
+		
+		//ahora la D (8bit)
+		if (x%3==0)	{YCD[2][i]=r;}
+		if (x%3==1)	{YCD[2][i]=g;}
+		if (x%3==2)	{YCD[2][i]=b;}
+		
+		
+		//r_old=r;
+		//g_old=g;
+		//b_old=b;
+		
+		//YCD[0][i]=red;
+		//YCD[1][i]=green;
+		//YCD[2][i]=blue;
+
+		i++;	
+		}
+	}
+
+	System.out.println ("convertida a YCD");
+}	
+
+//*******************************************************************************
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgTo8() {
+ 
+	System.out.println ("enter in img to YCD");
+	width=img.getWidth(); 
+	height=img.getHeight(); 
+
+	YCD=new int[3][width*height];
+	
+	int r_old=0;
+	int g_old=0;
+	int b_old=0;
+	
+	//this bucle converts BufferedImage object ( which is "img") into YUV array (luminance and chrominance)
+	int i=0;
+	for (int y=0;y<height;y++)  {
+		for (int x=0;x<width;x++)  {
+		
+			
+		int c=img.getRGB(x, y);
+
+		int r=(c & 0x00ff0000) >> 16;
+		int g=(c & 0x0000ff00) >> 8;
+		int b=(c & 0x000000ff);
+
+		//identical formulas used in JPEG . model YCbCr (not pure YUV)
+		YCD[0][i]=(r+g+b)/3; //lumminance [0..255]
+		
+		//ahora la D (8bit)
+		//if (y%3==0)
+		 {
+		 if (x%3==0)	{YCD[2][i]=r;}
+		 if (x%3==1)	{YCD[2][i]=g;}
+		 if (x%3==2)	{YCD[2][i]=b;}
+		 }
+		/* 
+		if (y%3==1)
+		 {
+		 if (x%3==1)	{YCD[2][i]=r;}
+		 if (x%3==2)	{YCD[2][i]=g;}
+		 if (x%3==0)	{YCD[2][i]=b;}
+		 }
+		if (y%3==2)
+		 {
+		 if (x%3==2)	{YCD[2][i]=r;}
+		 if (x%3==0)	{YCD[2][i]=g;}
+		 if (x%3==1)	{YCD[2][i]=b;}
+		 }
+		*/
+		
+		//r_old=r;
+		//g_old=g;
+		//b_old=b;
+		
+		//YCD[0][i]=red;
+		//YCD[1][i]=green;
+		//YCD[2][i]=blue;
+
+		i++;	
+		}
+	}
+
+	System.out.println ("convertida a YCD");
+}	
+
+//*******************************************************************************
+public void cache_sumas()
+{
+	//cache_sumas
+		cs=new int[255];
+		
+		int r=0;
+		int g=0;
+		int b=0;
+		
+		int k=0;
+		cs[0]=0;
+		k++;
+		for (r=2;r<65;r=r*2)
+			for (g=2;g<65;g=g*2)
+				for (b=2;b<65;b=b*2)
+				
+				{
+					if (k>255) break;
+					int rgb=b+g*256+r*65536;
+					
+					
+					cs[k]=rgb; k++;
+					System.out.println("cs["+k+"]="+r+","+g+","+b+ "    "+Math.log((double)r));
+			
+				}
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgTo8v002() {
+
+	System.out.println ("enter in img to YCD v002");
+	width=img.getWidth(); 
+	height=img.getHeight(); 
+
+	YCD=new int[3][width*height];
+	
+	
+				
+				
+	int r_old=0;
+	int g_old=0;
+	int b_old=0;
+	
+	//this bucle converts BufferedImage object ( which is "img") into YUV array (luminance and chrominance)
+	int i=0;
+	for (int y=0;y<height;y++)  {
+		for (int x=0;x<width;x++)  {
+		
+			
+		int c=img.getRGB(x, y);
+
+		 int r=(c & 0x00ff0000) >> 16;
+		 int g=(c & 0x0000ff00) >> 8;
+		 int b=(c & 0x000000ff);
+
+		//identical formulas used in JPEG . model YCbCr (not pure YUV)
+		//YCD[0][i]=(r+g+b)/3; //lumminance [0..255]
+		
+		//ahora la D (8bit)
+		//if (y%3==0)
+		 {
+		 if (x%3==0)	{YCD[2][i]=(r+g)/2;}
+		 if (x%3==1)	{YCD[2][i]=(g+b)/2;}
+		 if (x%3==2)	{YCD[2][i]=(b+r)/2;}
+		 }
+		/* 
+		if (y%3==1)
+		 {
+		 if (x%3==1)	{YCD[2][i]=r;}
+		 if (x%3==2)	{YCD[2][i]=g;}
+		 if (x%3==0)	{YCD[2][i]=b;}
+		 }
+		if (y%3==2)
+		 {
+		 if (x%3==2)	{YCD[2][i]=r;}
+		 if (x%3==0)	{YCD[2][i]=g;}
+		 if (x%3==1)	{YCD[2][i]=b;}
+		 }
+		*/
+		
+		//r_old=r;
+		//g_old=g;
+		//b_old=b;
+		
+		//YCD[0][i]=red;
+		//YCD[1][i]=green;
+		//YCD[2][i]=blue;
+
+		i++;	
+		}
+	}
+
+	System.out.println ("convertida a YCD");
+}	
+
+//*******************************************************************************
+
+
+//*******************************************************************************
+
+	public void YCDtoBMP(String pathImagen, int[][] ycd)
+	{
+		System.out.println ("enter in YCD to BMP");
+		//save image component Only one YUV component) in BMP format
+
+		BufferedImage buff_c=YCDtoImg(ycd);
+		saveBufferedImage(pathImagen, buff_c);
+
+	}
+	
+	//*******************************************************************************
+		public void YCD8toBMP(String pathImagen, int[][] ycd)
+		{
+			System.out.println ("enter in YCD to BMP");
+			//save image component Only one YUV component) in BMP format
+
+			BufferedImage buff_c=YCD8toImg(ycd);
+			saveBufferedImage(pathImagen, buff_c);
+
+		}
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		//*******************************************************************************
+				public void YCD8toBMP_v002(String pathImagen, int[][] ycd)
+				{
+					System.out.println ("enter in YCD to BMP");
+					//save image component Only one YUV component) in BMP format
+
+					//BufferedImage buff_c=YCD8toImgv002(ycd);
+					//BufferedImage buff_c=YCD8toImgv003(ycd);
+					BufferedImage buff_c=YCD8toImgv004(ycd);
+					//BufferedImage buff_c=YCD8toImgv005(ycd);
+					saveBufferedImage(pathImagen, buff_c);
+
+				}
+			//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	private BufferedImage YCDtoImg(int[][] ycd) {
+
+		System.out.println ("enter in YCD to img");
+			int r=0,g=0,b=0,yp=0;
+			int old_g=0,old_r=0,old_b=0;
+			
+			img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+			for (int y=0;y<height;y++)  {
+				for (int x=0;x<width;x++)  {
+
+					//the set of formulas must be coherent with formulas used for RGB->YUV
+					int i=x+(y)*width;
+					yp=ycd[0][i];
+					if (x%3==0)	{
+						//r=(ycd[1][i]-128)*2+r;
+						
+						
+						r=ycd[1][i];
+						int d=(3*yp-r-g-b ); //desviacion a repartir
+						
+						
+						
+						g=g+d/2; 
+						b=b+d/2;
+						//float f= (float)g/(float)(g+b+1);
+						//g=g+(int)((float)d*f); 
+						//b=b+(int)((float)d*(1-f));
+						
+						
+					}
+					
+					if (x%3==1)	{
+						//g=(ycd[1][i]-128)*2+g;
+						g=ycd[1][i];
+						int d=(3*yp-r-g-b ); //desviacion a repartir
+						
+						
+						r=r+d/2; 
+						b=b+d/2;
+						
+						
+						
+					}
+					if (x%3==2)	{
+						//b=(ycd[1][i]-128)*2+b;
+						
+						b=ycd[1][i];
+						int d=(3*yp-r-g-b ); //desviacion a repartir
+						
+						g=g+d/2; 
+						r=r+d/2;
+						
+						
+					}
+					if (r>255) r=255;
+					if (g>255) g=255;
+					if (b>255) b=255;
+					if (r<0) r=0;
+					if (g<0) g=0;
+					if (b<0) b=0;
+					old_r=r;
+					old_g=g;
+					old_b=b;
+					
+					//g=0;
+					//b=0;
+					//r=ycd[0][i];
+					//g=ycd[1][i];
+					//b=ycd[2][i];
+					
+					int rgb=b+g*256+r*65536;
+					img.setRGB(x, y, rgb);
+
+				}//x
+			}//y
+			
+			System.out.println ("exit from  YCD to img");
+			return img;
+		}	
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		private BufferedImage YCD8toImg(int[][] ycd) {
+
+			System.out.println ("enter in YCD to img");
+				int r=0,g=0,b=0,yp=0;
+				int old_g=0,old_r=0,old_b=0;
+				int d=0;
+				int old_d=0;
+				img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+				for (int y=0;y<height;y++)  {
+					for (int x=0;x<width;x++)  {
+
+						//the set of formulas must be coherent with formulas used for RGB->YUV
+						int i=x+(y)*width;
+						yp=ycd[0][i];
+						
+						//if (y%3==0)
+						 {
+						 if (x%3==0)	{d=ycd[2][i]-r;r=	ycd[2][i];
+						 				
+						 				//d=d/2;
+						 				float f=(float)g/(float)(g+b+1);
+						 				g=g+(int)(f*d);
+						 				b=b+(int)((1-f)*d);
+						 				//g=g+3*d/4;
+						 				//b=b+d/4;
+						 				
+						 				}
+						 
+						 if (x%3==1)	{d=ycd[2][i]-g;g=	ycd[2][i];
+						 			
+						 				float f=(float)r/(float)(r+b+1);
+						 				r=r+(int)(f*d);
+						 				b=b+(int)((1-f)*d);
+						 				
+						 				//r=r+3*d/6;
+						 				//b=b+3*d/6;
+			 							}
+			 
+						 
+						 if (x%3==2)	{d=ycd[2][i]-b;b=	ycd[2][i];
+						 				
+						 				//d=d/2;
+						 				float f=(float)r/(float)(r+g+1);
+						 				r=r+(int)(f*d);
+						 				g=g+(int)((1-f)*d);
+						 				//r=r+d/3;
+						 				//g=g+2*d/3;
+											
+						 				}
+						 }	
+					
+						if (y%3==5)
+						 {
+						 if (x%3==1)	r=	ycd[2][i];
+						 if (x%3==2)	g=	ycd[2][i];
+						 if (x%3==0)	b=	ycd[2][i];
+						 }	
+						if (y%3==6)
+						 {
+						 if (x%3==2)	r=	ycd[2][i];
+						 if (x%3==0)	g=	ycd[2][i];
+						 if (x%3==1)	b=	ycd[2][i];
+						 }	
+						
+						
+						
+						if (r>255) r=255;
+						if (g>255) g=255;
+						if (b>255) b=255;
+						if (r<0) r=0;
+						if (g<0) g=0;
+						if (b<0) b=0;
+						old_r=r;
+						old_g=g;
+						old_b=b;
+						
+						//g=0;
+						//b=0;
+						//r=ycd[0][i];
+						//g=ycd[1][i];
+						//b=ycd[2][i];
+						yp=r+g+b;
+						old_d=d;
+						
+						int rgb=b+g*256+r*65536;
+						img.setRGB(x, y, rgb);
+
+					}//x
+				}//y
+				
+				System.out.println ("exit from  YCD to img");
+				return img;
+			}		
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private BufferedImage YCD8toImgv002(int[][] ycd) {
+
+					System.out.println ("enter in YCD to img 8 v002");
+						int r=0,g=0,b=0,yp=0;
+						int old_g=0,old_r=0,old_b=0;
+						int d=0;
+						int old_d=0;
+						img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+						
+						r=ycd[2][0];
+						b=r;
+						g=r;
+						int lum=r+g+b;
+						int gradb=0,gradr=0,gradg=0;		
+						for (int y=0;y<height;y++)  {
+							for (int x=0;x<width;x++)  {
+
+								//the set of formulas must be coherent with formulas used for RGB->YUV
+								int i=x+(y)*width;
+								
+								
+								//if (y%3==0)
+								 {
+								 if (x%3==0)	{
+								 				
+								 				
+									 			old_r=r;
+									 			old_g=g;
+									 			
+									 			
+									 			d=ycd[2][i]*2-(r+g);
+									 			r=r+2*d/5;
+									 			g=g+3*d/5;
+									 			
+									 			
+									 			//float f=(float)r/(float)(g+r+1);
+								 				//r=r+(int)(f*d);
+								 				//g=g+(int)((1-f)*d);
+									 			//b=b+d/5;
+									 			/*
+									 			r=r+2*d/5;
+									 			g=g+3*d/5;
+									 			b=b+d/5;
+									 			*/
+									 			if (x>=2)
+									 			{
+									 				 int c=img.getRGB(x-1, y);
+									 				 int ra=(c & 0x00ff0000) >> 16;
+									 				 int ga=(c & 0x0000ff00) >> 8;
+									 				 int ba=(c & 0x000000ff);
+									 				 ga=(g+old_g)/2;
+									 				if (ga>255) ga=255;
+													if (ga<0) ga=0;
+													
+									 				 int rgb=ba+ga*256+ra*65536;
+													 img.setRGB(x-1, y, rgb);
+									 				
+									 			}
+									 			
+								 				}
+								 
+								 if (x%3==1)	{
+									 			
+									 			d=ycd[2][i]*2-(g+b);
+									 			
+									 			
+												old_g=g;
+												old_b=b;
+									 			g=g+d/2;
+									 			b=b+d/2;
+									 			
+									 			
+									 			if (x>=2)
+									 			{
+									 				 int c=img.getRGB(x-1, y);
+									 				 int ra=(c & 0x00ff0000) >> 16;
+									 				 int ga=(c & 0x0000ff00) >> 8;
+									 				 int ba=(c & 0x000000ff);
+									 				 ba=(b+old_b)/2;
+									 				if (ba>255) ba=255;
+													if (ba<0) ba=0;
+													
+									 				 int rgb=ba+ga*256+ra*65536;
+													 img.setRGB(x-1, y, rgb);
+									 				
+									 			}
+									 			
+									 			/*
+									 			g=g+d/2;
+									 			b=b+d/2;
+									 			r=r+d/6;
+									 			*/
+									 			//r=r+d/5;
+					 							}
+					 
+								 
+								 if (x%3==2)	{
+									 			d=ycd[2][i]*2-(r+b);
+									 			
+									 			old_r=r;
+												
+												old_b=b;
+												
+									 			r=r+3*d/5;
+									 			b=b+2*d/5;
+									 				
+									 			/*
+									 			r=r+3*d/5;
+									 			b=b+2*d/5;
+									 			g=g+d/2;
+									 			*/
+									 			
+									 			//g=g+d/5;
+									 			
+									 			
+									 			if (x>=2)
+									 			{
+									 				 int c=img.getRGB(x-1, y);
+									 				 int ra=(c & 0x00ff0000) >> 16;
+									 				 int ga=(c & 0x0000ff00) >> 8;
+									 				 int ba=(c & 0x000000ff);
+									 				 ra=(r+old_r)/2;
+									 				if (ra>255) ra=255;
+													if (ra<0) ra=0;
+													 int rgb=ba+ga*256+ra*65536;
+													 img.setRGB(x-1, y, rgb);
+									 				
+									 			}
+									 			}
+								 }	
+							
+								if (y%3==5)
+								 {
+								 if (x%3==1)	r=	ycd[2][i];
+								 if (x%3==2)	g=	ycd[2][i];
+								 if (x%3==0)	b=	ycd[2][i];
+								 }	
+								if (y%3==6)
+								 {
+								 if (x%3==2)	r=	ycd[2][i];
+								 if (x%3==0)	g=	ycd[2][i];
+								 if (x%3==1)	b=	ycd[2][i];
+								 }	
+								
+								
+								
+								if (r>255) r=255;
+								if (g>255) g=255;
+								if (b>255) b=255;
+								if (r<0) r=0;
+								if (g<0) g=0;
+								if (b<0) b=0;
+								
+								
+								//g=0;
+								//b=0;
+								//r=ycd[0][i];
+								//g=ycd[1][i];
+								//b=ycd[2][i];
+								//yp=r+g+b;
+								//old_d=d;
+								
+								//lum=(3*r+6*g+2*b);
+								
+								int rgb=b+g*256+r*65536;
+								img.setRGB(x, y, rgb);
+
+							}//x
+						}//y
+						
+						System.out.println ("exit from  YCD to img");
+						return img;
+					}		
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgTo8v003() {
+
+  System.out.println ("enter in img to YCD v003");
+  width=img.getWidth(); 
+  height=img.getHeight(); 
+
+  YCD=new int[3][width*height];
+								
+  int r_old=0;
+  int g_old=0;
+  int b_old=0;
+
+  int v=0;
+  int v_old=0;
+
+  int i=0;
+  int paleta=0;
+  int paleta_old=0;
+  int count=0;
+  for (int y=0;y<height;y++)  {
+    for (int x=0;x<width;x++)  {
+	 
+    	int c=img.getRGB(x, y);
+
+		int r=(c & 0x00ff0000) >> 16;
+		int g=(c & 0x0000ff00) >> 8;
+		int b=(c & 0x000000ff);
+
+		paleta= ((g & 128)+    ((r & 128)/2) + ((b & 128)/4)+
+				  ((g & 64)/4)+ ((r & 64)/8) +  ((b & 64)/16) 
+				 ); 
+				/*
+				 *255 +
+				 
+				(g & 32)*4+    ((r & 32)*2) + ((b & 32))+
+				  ((g & 16))+ ((r & 16)/2) +  ((b & 16)/4) ;
+				 */ 
+				  
+		
+		if ((paleta!=paleta_old) || false)
+		{
+			
+			
+			//v=(r & 0b11000000)+ ((g & 0b11000000)>>2) + ((b & 0b11000000)>>4);
+			
+			v=128+(
+			   (g & 128)+    ((r & 128)/2) + ((b & 128)/4)+
+			  ((g & 64)/4)+ ((r & 64)/8) +  ((b & 64)/16)
+			  )/2;
+			  v=v+(g &32)/32;
+		
+			  count=0;
+		}
+		else if (count==0)//paleta se mantiene
+		{
+		
+			count=1;
+			
+			
+			v=
+			   (g & 32)*2+ ((r & 32)) + ((b & 32)/2)+
+			   (g & 16)/2+ ((r & 16)/4) + ((b & 16)/8)+
+			   (g & 8)/8; 
+			   //(b & 16)/32;
+			
+			//v=(r+g)/(4);
+			
+			
+		}
+		
+		else if (count==1)
+		{
+			v=
+					   (g & 8)*8+ ((r & 8)*4) + ((b & 8)*2)+
+					   (g & 4)*2+ ((r & 4)) + ((b & 4)/2)+
+					   (g & 2)/2; 
+					
+			//count=0;
+			//v=(g+b)/(4);
+			v=
+					   (g & 32)*2+ ((r & 32)) + ((b & 32)/2)+
+					   (g & 16)/2+ ((r & 16)/4) + ((b & 16)/8)+
+					   (r & 8)/8; 
+					
+			count=0;
+			
+		}
+		paleta_old=paleta;    
+		//i=x+(y)*width;
+		YCD[2][i]=v;
+        v_old=v;
+        i++;
+		
+		}
+  }
+
+  System.out.println ("convertida a YCD");
+}	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private BufferedImage YCD8toImgv003(int[][] ycd) {
+
+System.out.println ("enter in YCD to img 8 v003");
+int r=0,g=0,b=0,yp=0;
+int g_old=0,r_old=0,b_old=0;
+int d=0;
+int old_d=0;
+img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+						
+r=0;
+b=r;
+g=r;
+int lum=r+g+b;
+int gradb=0,gradr=0,gradg=0;
+
+int v=0;
+//int paleta_old=0;
+int paleta=0;
+
+int count=0;
+int ap=0;
+int bp=0;
+int cp=0;
+
+  for (int y=0;y<height;y++)  {
+	  for (int x=0;x<width;x++)  {
+		  
+		  int i=x+(y)*width;
+		  v= ycd[2][i];
+    	  paleta=v & 128;
+		  
+		  if ((paleta==128) || false)
+		  {
+			//if (paleta!=paleta_old)
+			r=0;
+			g=0;
+			b=0;
+			  
+			//    g=g & 0b00111111;
+			//	r=r & 0b00111111;
+			//	b=b & 0b00111111;
+				
+				//System.out.println("grb  "+g+"  "+r+"  "+b);
+			
+			
+		    g=g+(v & 64)*2;   //128
+		    r=r+(v & 32)*2*2;
+		    b=b+(v & 16)*4*2;
+			
+		    //System.out.println("grb  "+g+"  "+r+"  "+b);
+		    //System.exit(0);
+		    
+		    g=g+(v & 8)*4*2; //64
+		    r=r+(v &  4)*8*2;
+		    b=b+(v &  2)*16*2;
+		    
+		    g=g+(v & 1)*32;  //32
+		    //r=r+(v &  1)*32; //32;
+		    
+		    r=r | 0b00011111;
+		    g=g | 0b00001111;
+		    b=b | 0b00011111;
+		    
+		    //r=(r+(r_old & 0b00111111));
+		    //g=(g+(g_old & 0b00111111));
+		    //b=(b+(b_old & 0b00111111));
+		   count=0;
+		   ap++;
+		  }
+		  else if (count==0)
+		  {
+			count =1;  
+			  /*  
+			
+				int dif=(r+g)-v*2;
+				r=r & 0b11000000;
+				g=g & 0b11000000;
+				
+				r=r | dif/2;
+				g=g | dif/2;
+			*/
+				
+				g=g & 0b11000000;
+				r=r & 0b11000000;
+				b=b & 0b11000000;
+			    
+				g=g+(v & 64)/2; //32
+			    r=r+(v & 32);
+			    b=b+(v & 16)*2;
+				
+			    
+			    g=g+(v & 8)*2; //16
+			    r=r+(v &  4)*4;
+			    b=b+(v &  2)*8;
+			    
+			    g=g+(v & 1)*8; //16
+			        
+			    
+
+			    r=r | 0b00000111;
+			    g=g | 0b00000011;
+			    b=b | 0b00000111;
+			    
+			  bp++;
+			  //r=0;
+			   // g=0;
+			   // b=0;
+		  }
+		  else if (count==1)
+		  {
+			/*  
+			     int dif=(b+g)-v*2;
+				b=b & 0b11000000;
+				g=g & 0b11000000;
+				
+				b=b | dif/2;
+				g=g | dif/2;
+			*/
+				g=g & 0b11000000;
+				r=r & 0b11000000;
+				b=b & 0b11000000;
+			    
+				g=g+(v & 64)/2; //32
+			    r=r+(v & 32);
+			    b=b+(v & 16)*2;
+				
+			    
+			    g=g+(v & 8)*2; //16
+			    r=r+(v &  4)*4;
+			    b=b+(v &  2)*8;
+			    
+			    r=r+(v & 1)*8; //16
+			        
+			    
+
+			    r=r | 0b00000011;
+			    g=g | 0b00000011;
+			    b=b | 0b00000111;
+			    
+			  
+
+			  /*
+			    g=g & 0b11110000;
+				r=r & 0b11110000;
+				b=b & 0b11110000;
+			    
+				g=g+(v & 64)/8; //8
+			    r=r+(v & 32)/4;
+			    b=b+(v & 16)/2;
+				
+			    
+			    g=g+(v & 8)/2; //4
+			    r=r+(v &  4);
+			    b=b+(v &  2)*2;
+			    
+			    g=g+(v & 1)*2; //2
+*/
+			    
+			    count=0;
+			    cp++;
+			    
+			    //r=0;
+			    //g=0;
+			    //b=0;
+			    
+		  }
+		  
+			if (r>255) r=255;
+			if (g>255) g=255;
+			if (b>255) b=255;
+			if (r<0) r=0;
+			if (g<0) g=0;
+			if (b<0) b=0;
+
+		  int rgb=b+g*256+r*65536;
+		  
+		  img.setRGB(x, y, rgb);
+		
+//		  paleta_old =paleta_old;
+		  r_old=r;
+		  g_old=g;
+		  b_old=b;
+		  
+		  
+    }//x
+  }//y
+						
+   System.out.println ("exit from  YCD to img");
+   System.out.println ("a:"+ap+"  b:"+bp+"  c:"+cp);
+   return img;
+   
+   
+}		
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//*******************************************************************************
+
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgTo8v004() {
+
+System.out.println ("enter in img to YCD v003");
+width=img.getWidth(); 
+height=img.getHeight(); 
+
+YCD=new int[3][width*height];
+								
+int r_old=0;
+int g_old=0;
+int b_old=0;
+int r=0;
+int g=0;
+int b=0;
+int rgb=0;
+int rgb_old=0;
+int rg=0;
+int rg_old=0;
+int rb=0;
+int rb_old=0;
+int gb=0;
+int gb_old=0;
+
+int v=0;
+int v_old=0;
+
+int i=0;
+int paleta=0;
+int paleta_old=0;
+int count=0;
+for (int y=0;y<height;y++)  {
+  for (int x=0;x<width;x++)  {
+	 
+  	int c=img.getRGB(x, y);
+
+		 r=(c & 0x00ff0000) >> 16;
+		 g=(c & 0x0000ff00) >> 8;
+		 b=(c & 0x000000ff);
+		
+		rgb=(r+g+b)/3;
+		
+		rg=(r+g)/2;
+		rb=(r+b)/2;
+		gb=(g+b)/2;
+		
+		int d_rgb=Math.abs(rgb-rgb_old);
+		int d_r=Math.abs(r-r_old);
+		int d_g=Math.abs(g-g_old);
+		int d_b=Math.abs(b-b_old);
+		int d_rg=Math.abs(rg-rg_old);
+		int d_gb=Math.abs(gb-gb_old);
+		int d_rb=Math.abs(rb-rb_old);
+		
+		
+		
+		//int m=Math.max(d_rgb, Math.max(d_rg, Math.max(d_gb, d_rb)));
+		//int m=Math.max(d_rgb, Math.max(d_r, Math.max(d_g, d_b)));
+		//int m=Math.min(d_rgb, Math.min(d_r, Math.min(d_g, d_b)));
+		//if (m == d_rgb || x==0 || count==0)
+		int k=rgb;
+		int pot=0;
+		int cte=0;
+		int rbit=0;
+		int gbit=0;
+		int bbit=0;
+		
+		int m=32;
+		
+		if (r>=128) {cte=128; rbit=1;}
+		if (g>=128) {cte=cte+64;gbit=1;}
+		if (b>=128) {cte=cte+32;bbit=1;}
+		
+		//System.out.println("--- "+r+":"+rbit+","+g+":"+gbit+","+b+":"+bbit+"       ");
+		//if (x==0) count=0;// 1+y %2;
+		if (x==0) count= y%2;
+		
+		if (count==0){
+			v=r;
+			
+			v=v & 0b01111111;
+			v=(v>>2);
+			v=cte+v;
+			count=1;
+			
+		}
+		else if (count==1){
+			v=g;
+			v=v & 0b01111111;
+			v=(v>>2);
+			v=cte+v;
+			count=2;
+		}
+		else 
+		{
+			v=b;
+			v=v & 0b01111111;
+			v=(v>>2);
+			v=cte+v;
+			count=0;
+		}
+		
+		/*
+		while (k>1)
+		{
+			k= k >> 1;
+			pot++;
+		}
+		k=(int)(Math.pow(2,pot));
+		
+		if (count==0) {v=(int)(((float)k/255f)*r)+k;count=1;}
+		else if (count==1) {v=(int)(((float)k/255f)*g)+k;count=2;}
+		else if (count==2) {v=(int)(((float)k/255f)*b)+k;count=0;}
+		*/
+		//System.out.println(" rgb:"+rgb+" k:"+k+"    v:"+v+ "   pot:"+pot);		
+		YCD[2][i]=v;
+      v_old=v;
+      i++;
+		
+		}
+}
+
+System.out.println ("convertida a YCD");
+}	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private BufferedImage YCD8toImgv004(int[][] ycd) {
+
+System.out.println ("enter in YCD to img 8 v003");
+int r=0,g=0,b=0,yp=0;
+int g_old=0,r_old=0,b_old=0;
+int d=0;
+int old_d=0;
+img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+						
+r=0;
+b=r;
+g=r;
+int lum=r+g+b;
+int gradb=0,gradr=0,gradg=0;
+
+int v=0;
+//int paleta_old=0;
+int paleta=0;
+
+int count=0;
+int ap=0;
+int bp=0;
+int cp=0;
+
+
+int r_yant=0;
+int g_yant=0;
+int b_yant=0;
+
+r=128;
+g=128;
+b=128;
+
+int r_bit=0;
+int g_bit=0;
+int b_bit=0;
+
+int r_bit_old=0;
+int g_bit_old=0;
+int b_bit_old=0;
+
+int lum_old=r+g+b;
+int ar=0;
+int ag=0;
+int ab=0;
+for (int y=0;y<height;y++)  {
+	  for (int x=0;x<width;x++)  {
+		  
+		  int i=x+(y)*width;
+		  v= ycd[2][i];
+  	  
+		  //v=v & 0b11100000;
+		  r_bit= (v & 0b10000000)/128;
+		  g_bit= (v & 0b01000000)/64;
+		  b_bit= (v & 0b00100000)/32;
+		  
+		  //System.out.println ("--- "+r_bit+","+g_bit+","+b_bit);
+		  
+		  
+		  //if (x>0 && y>0 && x<width-1){
+			  //int c=img.getRGB(x-1, y);
+			  	//prediccion
+				 //r=(c & 0x00ff0000) >> 16;
+				 //g=(c & 0x0000ff00) >> 8;
+				 //b=(c & 0x000000ff);
+		  //}
+			  //r=r+ar/4;
+			  //g=g+ag/4;
+			  //b=b+ab/4;
+		  //System.out.println("ar:"+ar);
+		  
+		  
+		  
+		  //r=0;
+		  //g=0;
+		  //b=0;
+		  int brusco=0;
+		  //int semibrusco=1;
+		  if ((r_bit!=r_bit_old) && (g_bit!=g_bit_old) && (b_bit!=b_bit_old)) brusco=1;
+		  
+		  
+		  
+		  int cte=0;
+		  int m=4;
+		  
+		  if (r_bit!=r_bit_old) {if (r_bit==1){r=128+m;}else {r=128-m;}}
+		  if (g_bit!=g_bit_old) {if (g_bit==1){g=128+m;}else {g=128-m;}}
+		  if (b_bit!=b_bit_old) {if (b_bit==1){b=128+m;}else {b=128-m;}}
+		  
+		  int max=255;
+		  int min=0;
+
+		  
+		  
+		  //if (r_bit!=r_bit_old && brusco==1 ) {if (r_bit==1){r=max;}else {r=min;}}
+		  //if (g_bit!=g_bit_old && brusco==1 ) {if (g_bit==1){g=max;}else {g=min;}}
+		  //if (b_bit!=b_bit_old && brusco==1 ) {if (b_bit==1){b=max;}else {b=min;}}
+		  
+		  //lum=(r+b+g)/3;
+		  //if (r_bit!=r_bit_old) {r=128;}
+		  //if (g_bit!=g_bit_old) {g=128;}
+		  //if (b_bit!=b_bit_old) {b=128;}
+		  
+		  
+		  v= ycd[2][i];
+		  v=v & 0b00011111;;
+		  v=v << 2;
+		  
+		  v=v+1;
+		  //System.out.println ("v:"+v);
+		  
+		  if (x==0) count= (y)%2;
+		  
+		  if (count==0){
+			  if (r_bit==1){r=128+v;} else r=v; 
+			  count=1;
+			  if ( brusco==1 ) {g=r;b=r;}
+			  
+			//ajuste semibrusco
+			  d=r-r_old;
+			  if (r_bit==g_bit && r_bit_old==g_bit_old && r_bit !=r_bit_old){g=r;};
+			  if (r_bit==b_bit && r_bit_old==b_bit_old && r_bit !=r_bit_old){b=r;};
+		  }
+		  else if (count==1){
+			  if (g_bit==1){g=128+v;} else g=v; 
+			  count=2;
+			  if ( brusco==1 ) {r=g;b=g;}
+			  
+			//ajuste semibrusco
+			  d=g-g_old;
+			  if (r_bit==g_bit && r_bit_old==g_bit_old && g_bit !=g_bit_old){r=g;};
+			  if (g_bit==b_bit && g_bit_old==b_bit_old && b_bit !=b_bit_old){b=g;};
+		  }
+		  else 
+		  {
+			  if (b_bit==1){b=128+v;} else b=v; 
+			  count=0;
+			  if ( brusco==1 ) {r=b;g=b;}
+			  d=b-b_old;
+			  //ajuste semibrusco
+			  if (b_bit==r_bit && b_bit_old==r_bit_old && r_bit !=r_bit_old){r=b;};
+			  if (b_bit==g_bit && g_bit_old==b_bit_old && b_bit !=b_bit_old){g=b;};
+		  }
+		 //System.out.println ("r:"+r+"g:"+g+"b:"+b);
+		  
+		  //lum=(r+g+b)/3;
+		  //if (count !=1 && r_bit!=r_bit_old) {if (r_bit==1){r=128;}else {r=128;}}
+		  //if (count !=2 && g_bit!=g_bit_old) {if (g_bit==1){g=128+m;}else {g=128-m;}}
+		  //if (count !=0 && b_bit!=b_bit_old) {if (b_bit==1){b=128+m;}else {b=128-m;}}
+		  
+		  
+		  r_bit_old=r_bit;
+		  g_bit_old=g_bit;
+		  b_bit_old=b_bit;
+		  
+		  
+		  
+		  
+		if (r>255) r=255;
+		if (g>255) g=255;
+		if (b>255) b=255;
+		if (r<0) r=0;
+		if (g<0) g=0;
+		if (b<0) b=0;
+	
+		  
+		  int rgb=b+g*256+r*65536;
+		  
+		  img.setRGB(x, y, rgb);
+		
+		  ar=r-r_old;
+		  ag=g-g_old;
+		  ab=b-b_old;
+		  
+//		  paleta_old =paleta_old;
+		  
+		  r_old=r;
+		  g_old=g;
+		  b_old=b;
+		  
+		  
+		  lum_old=lum;//r+g+b;
+		  
+  }//x
+}//y
+						
+ System.out.println ("exit from  YCD to img");
+ System.out.println ("a:"+ap+"  b:"+bp+"  c:"+cp);
+ return img;
+ 
+ 
+}		
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//*******************************************************************************
+
+public int bit(int n, int dato)
+{
+	
+	int res=dato & (int) (( Math.pow(2, n)));
+	res=res / (int)Math.pow(2, n);
+	return res;
+	
+}
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private void imgTo8v005() {
+
+System.out.println ("enter in img to YCD v003");
+width=img.getWidth(); 
+height=img.getHeight(); 
+
+YCD=new int[3][width*height];
+								
+int r_old=0;
+int g_old=0;
+int b_old=0;
+int r=0;
+int g=0;
+int b=0;
+int rgb=0;
+int rgb_old=0;
+int rg=0;
+int rg_old=0;
+int rb=0;
+int rb_old=0;
+int gb=0;
+int gb_old=0;
+
+int v=0;
+int v_old=0;
+
+int i=0;
+int paleta=0;
+int paleta_old=0;
+int count=0;
+
+int t[]=new int[6];
+int t_old[]=new int[6];
+
+
+for (int y=0;y<height;y++)  {
+for (int x=0;x<width;x++)  {
+	 
+	int color=img.getRGB(x, y);
+
+		 r=(color & 0x00ff0000) >> 16;
+		 g=(color & 0x0000ff00) >> 8;
+		 b=(color & 0x000000ff);
+		
+		rgb=(r+g+b)/3;
+		
+		t[0]= 4*bit(7,r)+2*bit(7,g)+bit(7,b);
+		t[1]= 4*bit(6,r)+2*bit(6,g)+bit(6,b);
+		t[2]= 4*bit(5,r)+2*bit(5,g)+bit(5,b);
+		t[3]= 4*bit(4,r)+2*bit(4,g)+bit(4,b);
+		t[4]= 4*bit(3,r)+2*bit(3,g)+bit(3,b);
+		t[5]= 4*bit(2,r)+2*bit(2,g)+bit(2,b);
+		
+		if   ( (t[0]!=t_old[0]) ||  (t[1]!=t_old[1]) || x==0 
+			||
+			 (t[2]!=t_old[2]) ||  (t[3]!=t_old[3]) )
+			 	
+			
+		{
+			v=128+t[0]*16+t[1]*2;
+			
+			count=1;
+			
+		}
+		else if (count==1 )
+		{
+			v=0+t[2]*16+t[3]*2;
+			count=2;
+		}
+		else 
+		{
+			v=0+t[4]*16+t[5]*2;
+			count=2;
+		}
+		
+		for (int j=0;j<6;j++) t_old[j]=t[j];
+			
+		YCD[2][i]=v;
+		v_old=v;
+		i++;
+		
+		}
+}
+
+System.out.println ("convertida a YCD");
+}	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+private BufferedImage YCD8toImgv005(int[][] ycd) {
+
+System.out.println ("enter in YCD to img 8 v003");
+int r=0,g=0,b=0,yp=0;
+int g_old=0,r_old=0,b_old=0;
+
+
+img= new BufferedImage (width,height,BufferedImage.TYPE_INT_RGB);
+						
+r=0;
+b=r;
+g=r;
+
+int v=0;
+
+int t[]=new int[6];
+int t_old[]=new int[6];
+
+int tes=0b111;
+System.out.println ("tes:"+bit(2,tes)+"  "+bit(1,tes)+"  "+bit(0,tes));
+//if (2>1) System.exit(0);
+
+
+int count=0;
+
+for (int j=0;j<6;j++) {t_old[j]=0;t[j]=0;};
+int m=0;
+for (int y=0;y<height;y++)  {
+	  for (int x=0;x<width;x++)  {
+		  
+		  int i=x+(y)*width;
+		  v= ycd[2][i];
+	  
+		  if (v>128 || x==0 )
+		  {
+			 v=v-128;
+			 count=1;
+			 //for (int j=0;j<6;j++) {t_old[j]=0;t[j]=1;};
+			 t[0]= (v & 0b01110000)>>4;
+			 t[1]= (v & 0b00001110)>>1;
+		    
+
+
+		
+		  }
+		  else if (count==1 )
+		  {
+			  count=2;
+				 t[2]= (v & 0b01110000)>>4;
+				 t[3]= (v & 0b00001110)>>1;
+		
+				
+		  }
+		  else if (count==2)
+		  {
+			  count=2;
+				 t[4]= (v & 0b01110000)>>4;
+				 t[5]= (v & 0b00001110)>>1;
+			
+			count=2;
+		  }
+		  
+		  r=bit(2,t[0])*128+bit(2,t[1])*64+bit(2,t[2])*32+bit(2,t[3])*16+bit(2,t[4])*8+bit(2,t[5])*4;
+		  g=bit(1,t[0])*128+bit(1,t[1])*64+bit(1,t[2])*32+bit(1,t[3])*16+bit(1,t[4])*8+bit(1,t[5])*4;
+		  b=bit(0,t[0])*128+bit(0,t[1])*64+bit(0,t[2])*32+bit(0,t[3])*16+bit(0,t[4])*8+bit(0,t[5])*4;
+		  
+		  //r=(r+r_old)/2;
+		  //g=(g+g_old)/2;
+		  //b=(b+b_old)/2;
+		  
+		  /*
+		if (r>255) r=255;
+		if (g>255) g=255;
+		if (b>255) b=255;
+		if (r<0) r=0;
+		if (g<0) g=0;
+		if (b<0) b=0;
+		*/
+		  int rgb=b+g*256+r*65536;
+		  
+		  img.setRGB(x, y, rgb);
+		
+		  
+//		  paleta_old =paleta_old;
+		  r_old=r;
+		  g_old=g;
+		  b_old=b;
+		 
+		  
+}//x
+}//y
+						
+System.out.println ("exit from  YCD to img");
+
+return img;
+
+
+}		
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 }// end class
+
 

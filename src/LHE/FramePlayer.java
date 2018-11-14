@@ -70,10 +70,11 @@ public class FramePlayer {
 		boolean flagAdaptive=false;
 		boolean flagAdaptive2=false;
 		boolean flagEPXP=false;
+		boolean flagEDGE=false;
 		if (INTERPOL.equals("ADAPTIVE")) flagAdaptive=true;
 		if (INTERPOL.equals("ADAPTIVE2")) flagAdaptive2=true;
 		if (INTERPOL.equals("EPXP")) flagEPXP=true;
-		
+		if (INTERPOL.equals("EDGE")) flagEDGE=true;
 		
 		//ahora ya tenemos a downsampled LHE. procedemos a reescalar
 		//-------------------------------------------------------------
@@ -188,7 +189,7 @@ public class FramePlayer {
 				if (flagAdaptive2)  computeAdaptiveInterpol2(y,x);
 				
 				if (flagEPXP) INTERPOL=new String ("NN"); 
-				
+				if (flagEDGE) INTERPOL=new String ("NN"); 
 				
 				
 				if (INTERPOL.equals("BICUBIC")) bi.interpolateBicubicV(img.downsampled_LHE_YUV,img.intermediate_interpolated_YUV);
@@ -388,15 +389,47 @@ public class FramePlayer {
 
 				{
 
-			
+			//System.out.println("kokokokok");
 			//aplicamos EPX si ppp > umbral, de forma selectiva pixel a pixel
 			Block bi=grid.bl[y][x];
 			bi.filterEPXP(11,16, y,x, grid.prbl);
+			
 				}
 			}
 		}
 		//--------------------------
-		
+		else if (flagEDGE)
+		{
+
+			for ( int y=0 ; y<grid.number_of_blocks_V;y++)
+			{
+				for ( int x=0 ; x<grid.number_of_blocks_H;x++)
+
+				{
+
+			//System.out.println("kokokokok");
+			//aplicamos EDGE si ppp > umbral, de forma selectiva pixel a pixel
+			Block bi=grid.bl[y][x];
+			bi.filterEDGE(y,x, grid.prbl,1);
+			//bi.filterEDGE(y,x, grid.prbl,2);
+			
+				}
+			}
+			for ( int y=0 ; y<grid.number_of_blocks_V;y++)
+			{
+				for ( int x=0 ; x<grid.number_of_blocks_H;x++)
+
+				{
+
+			//System.out.println("kokokokok");
+			//aplicamos EDGE si ppp > umbral, de forma selectiva pixel a pixel
+			Block bi=grid.bl[y][x];
+			//bi.filterEDGE(y,x, grid.prbl,1);
+			bi.filterEDGE(y,x, grid.prbl,2);
+			
+				}
+			}
+		}
 		//ojo el tipo epx es para toda la imagen
 		else if (INTERPOL.equals("EPX")) {
 			

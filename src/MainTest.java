@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 
 
+
 import kanzi.test.MySSIM;
 //classes from package LHE
 import LHE.Block;
@@ -35,7 +36,7 @@ public class MainTest {
 		
 	//cosa[0][0][0][0]=1;
 	
-			
+		
 	System.out.println("Menu:");
 	System.out.println ("0) compress an image using Basic-LHE (bit-rate non elegible)");
 	System.out.println ("1) compress an image [default if you press ENTER]");
@@ -54,11 +55,15 @@ public class MainTest {
 	System.out.println ("9) compress SIMPLE LHE ( basicLHE + static huffman). fixed bit rate ");
 	System.out.println ("10) compress image SIMPLE LHE sampled (preLHE2)");
 	System.out.println ("11) compress video SIMPLE LHE sampled (preLHE2)");
+	System.out.println ("12) experimental LC");
+	System.out.println ("13) experimental 16 bit color");
+	System.out.println ("14) experimental 8bit color");
 	
 	String option =  readKeyboard();
 	System.out.println ("your option is : "+option);
 	
 	MainTest m=new MainTest();
+	//m.YCDfilter();
 	if (option.equals("1") || option.equals("")) m.compressImage();
 	else if (option.equals("2")) m.compressDirFullPercent();
 	else if (option.equals("3")) m.compressDirFullBpp();
@@ -73,6 +78,60 @@ public class MainTest {
 	else if (option.equals("9")) m.compressImageSIMPLELHE();
 	else if (option.equals("10")) m.compressImageSIMPLELHE_sampled();
 	else if (option.equals("11")) m.compressVideoSIMPLELHE_sampled();
+	else if (option.equals("12")) m.LCcolorModel();
+	
+	else if (option.equals("13")) m.YCDfilter(16);
+	
+	else if (option.equals("14")) m.YCDfilter(8);
+	
+	}
+	
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void LCcolorModel()
+	{
+		String filename =  readKeyboard();
+		if (filename.equals("")) filename=new String("./img/lena.bmp");
+		ImgUtil  img=new ImgUtil();
+		
+		img.lc_BMPtoLC(filename);//RGB to LC
+		
+		img.lc_LCtoBMP("./output_img/LC.bmp");
+		
+		
+	}
+	
+	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	public void YCDfilter(int bits)
+	{
+		System.out.println("you have enter into YCD");
+
+		System.out.println("input filename:");
+		String filename =  readKeyboard();
+		if (filename.equals("")) filename=new String("./img/lena_color.bmp");
+		
+		//filename=new String("./img/lena_color.bmp");
+		
+		FrameCompressor fc=new LHE.FrameCompressor(1);
+		fc.DEBUG=true;
+		fc.loadFrame(filename);
+		//fc.img.cache_sumas();
+		
+		if (bits==16) fc.img.RGBtoYCD(filename);
+		if (bits==8) fc.img.RGBto8v002(filename);
+		//fc.img.RGBto8(filename);
+		//fc.img.RGBto8v002(filename);
+		
+		if (bits==16)fc.img.YCDtoBMP("./output_img/testYC"+bits+".bmp", fc.img.YCD);
+		if (bits==8)fc.img.YCD8toBMP_v002("./output_img/testYC"+bits+".bmp", fc.img.YCD);
+		//fc.img.YCD8toBMP("./output_img/testYC.bmp", fc.img.YCD);
+		//fc.img.YCD8toBMP_v002("./output_img/testYC.bmp", fc.img.YCD);
+		
+		
+		System.out.println("exit from YCD");
+		double psnr=PSNR.printPSNR("./output_img/testYC"+bits+".bmp", filename);
+		System.out.println(" PSNR:"+psnr);
+		
 	}
 	
 	//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -320,7 +379,7 @@ public class MainTest {
 		}
 		//-------------------------------------------------
 		
-		System.out.println ("select interpolation method: 1)NN  or 2)BIL or 3)BIC or 4) EXPERIMENTAL 5) NNL 6) NNSR 7)EPX 8)ADAPTIVE 9)adap2 [default=3] :");
+		System.out.println ("select interpolation method: 1)NN  or 2)BIL or 3)BIC or 4) EXPERIMENTAL 5) NNL 6) NNSR 7)EPX 8)ADAPTIVE 9)adap2 10)EPXP 11) edge [default=3] :");
 		String interpol = readKeyboard();
 		if (interpol.equals("")) interpol=new String("3");
 		
@@ -396,7 +455,8 @@ public class MainTest {
 		else if (interpol.equals("7")) fp.INTERPOL=new String("EPX");
 		else if (interpol.equals("8")) fp.INTERPOL=new String("ADAPTIVE");
 		else if (interpol.equals("9")) fp.INTERPOL=new String("ADAPTIVE2");
-		
+		else if (interpol.equals("10")) fp.INTERPOL=new String("EPXP");
+		else if (interpol.equals("11")) fp.INTERPOL=new String("EDGE");
 		
 		fp.DEBUG=debug;
 		fp.img=fc.img;

@@ -57,7 +57,7 @@ public class Block {
 	///constant(final)  max value of any PPP. any instance of block share this maximum value (static)
 	// a maximum PPP=20 means that maximum spatial compression is 1/(20x20) =0.0025  ( 0.25 % of original size)
 	
-	//OJO PPPmax se ajusta en fromPRtoPPP(), alli se machaca el valor que se ponga aqui
+	//OJO PPPmax se ajusta en grid.fromPRtoPPP(), alli se machaca el valor que se ponga aqui
 	public static float MAX_PPP=8;//20;//8;//4; //20;//20;//8;//16;//16;
 	
 
@@ -1142,7 +1142,8 @@ System.out.println("ENTER IN  pppToRectangleShapeFloat");
 
 		//weight to the larger side
 		float weight=2;
-		//weight=2;
+		
+		//weight=1;
 		
 		float side_average=side_c;
 		// ajustment of horizontal sides
@@ -1418,7 +1419,13 @@ System.out.println("ENTER IN  pppToRectangleShapeFloat");
 }
 			  
 				System.out.println("OUT FROM  pppToRectangleShapeFloat");
+	
+		 
 		 */
+		
+		
+		
+		
 	}
 
 	//*******************************************************************
@@ -7322,7 +7329,7 @@ public void downsampleSPSOneShot_mal( int[][] src_YUV, int[][] result_YUV)
 
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
+public void downsampleSPSOneShot_ok( int[][] src_YUV, int[][] result_YUV)
 {
 	// we assume that the block has already rectangle shape, 
 	// during this "Horizontal" processing we fill  the "horizontal_downsampled_YUV" array
@@ -7394,6 +7401,113 @@ public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
 }
 
 //****************************************************************************************
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+public void downsampleSPSOneShot( int[][] src_YUV, int[][] result_YUV)
+{
+	// we assume that the block has already rectangle shape, 
+	// during this "Horizontal" processing we fill  the "horizontal_downsampled_YUV" array
+	// gradient PPPx side a
+	
+	//initialization of ppp 
+	
+	//System.out.println("Hola");
+	float ppp_xa=ppp[0][0];
+	float ppp_xb=ppp[0][1];
+  float ppp_ya=ppp[1][0];
+  float ppp_yb=ppp[1][1];
+  float ppp_yc=ppp_ya;//ppp[1][0];
+  
+	//gradient side a
+	float gr_a_pppx=(ppp[0][2]-ppp[0][0])/(ly_sc-1);
+	//float gr_a_pppx=(ppp[0][2]-ppp[0][0])/(ly_sc);
+	float gr_a_pppy=(ppp[1][2]-ppp[1][0])/(ly_sc-1);
+	//float gr_a_pppy=(ppp[1][2]-ppp[1][0])/(ly_sc);
+
+	//gradient side b
+	float gr_b_pppx=(ppp[0][3]-ppp[0][1])/(ly_sc-1);
+	//float gr_b_pppx=(ppp[0][3]-ppp[0][1])/(ly_sc);
+	float gr_b_pppy=(ppp[1][3]-ppp[1][1])/(ly_sc-1);
+	//float gr_b_pppy=(ppp[1][3]-ppp[1][1])/(ly_sc);
+
+  //gradient side c. ojo aqui usamos lx_sc
+	
+  float gr_c_pppy=(ppp[1][1]-ppp[1][0])/(lx_sc-1);
+	//float gr_c_pppy=(ppp[1][1]-ppp[1][0])/(lx_sc);
+  
+  float ya=yini;//mundo real
+  
+	for (int y_sc=yini;y_sc<=downsampled_yfin;y_sc++)
+	{
+		ppp_yc=ppp[1][0];
+		//float gr_pppx=(ppp_xb-ppp_xa)/(lx_sc-1f);
+		float gr_pppx=(ppp_xb-ppp_xa)/(lx_sc);
+		//float gr_pppy=(ppp_yb-ppp_ya)/(lx_sc-1f);
+		float gr_pppy=(ppp_yb-ppp_ya)/(lx_sc);
+		//initialization of pppx at start of scanline
+		float pppx=ppp_xa;
+		float xa=xini;
+		
+		//initialization of pppy at start of scanline
+		float pppy=ppp_ya;
+		ya+=ppp_ya/2;
+		
+		//dominio original
+		float y=ya;
+		float x=xa;
+		
+		int last_res=-1;
+		for (int x_sc=xini;x_sc<=downsampled_xfin;x_sc++)
+		{
+			x+=pppx/2;
+			
+			y=(int)(yini+ppp_yc/2+((pppy+ppp_yc)*(y_sc-yini))/2.0f);
+			
+			//x=(int)(xini+ppp_xa/2+((pppx+ppp_xa)*(x_sc-xini))/2.0f); //ya no hace falta asi
+			
+			//result_YUV[0][y_sc*img.width+x_sc]=src_YUV[0][(int)(y)*img.width+(int)(x)];
+			
+			//if (pppx<=1.1f || x_sc== xini || x_sc==downsampled_xfin || y_sc==yini || y_sc==downsampled_yfin)
+			//System.out.println ("pppx:"+pppx);
+			//if (last_res==-1 || pppx<1.1f)
+			result_YUV[0][y_sc*img.width+x_sc]=src_YUV[0][(int)(y+0.5f)*img.width+(int)(x)];
+			//else 
+			//result_YUV[0][y_sc*img.width+x_sc]=(src_YUV[0][(int)(y+0.5f)*img.width+(int)(x)]+last_res)/2;
+			//last_res=src_YUV[0][(int)(y+0.5f)*img.width+(int)(x)];
+			/*else
+				result_YUV[0][y_sc*img.width+x_sc]=(int)(
+													//0.5f*src_YUV[0][(int)(y+0.5f)*img.width+(int)(x)]+
+													//0.5f*src_YUV[0][(int)(y+0.5f)*img.width+(int)(x-1)]
+													//0.1f*src_YUV[0][(int)(y+0.5f)*img.width+(int)(x+1)]+
+													//0.1f*src_YUV[0][(int)(y-1+0.5f)*img.width+(int)(x)]+
+													//0.1f*src_YUV[0][(int)(y+1+0.5f)*img.width+(int)(x)]
+															);
+			*/
+			//pppx+=gr_pppx;
+			x+=pppx/2;
+			pppx+=gr_pppx;
+			
+			ppp_yc+=gr_c_pppy;
+			pppy+=gr_pppy;
+			//x+=pppx/4;
+			//x+=pppx;
+		}//x
+		ppp_xa+=gr_a_pppx;
+		ppp_xb+=gr_b_pppx;
+		//ppp_ya+=gr_a_pppy;
+		ppp_yb+=gr_b_pppy;
+		
+		ya+=ppp_ya/2;
+		ppp_ya+=gr_a_pppy;
+		
+	}//y
+
+
+}
+
+//****************************************************************************************
+
+
+
 public void filterEPX2x(int u1,int u2 )
 {
 //esta funcion filtra por EPX la imagen 
@@ -7449,11 +7563,11 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 	float gry_pppbx=(ppp[0][1]-ppp[0][3])/(yfin-yini);// constante, es el lado b
 	
 	float gry_pppay=(ppp[1][2]-ppp[1][0])/(yfin-yini);// constante, es el lado a
-	float gry_pppby=(ppp[1][1]-ppp[1][3])/(yfin-yini);// constante, es el lado b
-	
+	//float gry_pppby=(ppp[1][1]-ppp[1][3])/(yfin-yini);// constante, es el lado b
+	float gry_pppby=(ppp[1][3]-ppp[1][1])/(yfin-yini);// constante, es el lado b
 	
 	float umbral_ppp=1.5f;
-	float umbral_pr=0.125f;
+	float umbral_pr=0.0f;//125f;
 	
 	
 	for (int y=yini; y<=yfin;y++)
@@ -7495,21 +7609,25 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 				im[y*img.width+x]=(im[(y-1)*img.width+x]+im[(y)*img.width+x])/2;
 			}
 			*/
-				
+			if ((pppx>umbral_ppp || pppy>umbral_ppp))
+			{
 			  if (prx<=umbral_pr && pry<=umbral_pr)
 			    {
 				
 				  filter1pixSoft(im,y,x);
-				 // filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
+				  //filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
 				//System.out.println ("**********************************************");
 			    }
-			    
-			  else if (pppx>=umbral_ppp && pppy>=umbral_ppp)
+			}   
+			//else
+			
+				if (pppx>=umbral_ppp && pppy>=umbral_ppp)
 			    {
 				  
 			      filter1pixEPX2x_003(im,y,x,u1,u2); //filtra 1pixel
-			     
+				//filter1pixEPX2x_004(im,y,x,u1,u2); //filtra 1pixel
 			    }
+			
 			}
 			pppx+=grx_pppx;
 			pppy+=grx_pppy;
@@ -7538,9 +7656,10 @@ public void filterEPXP(int u1,int u2 , int by, int bx, PRblock[][] prbl)
 public void filter1pixSoft(int [] im, int y, int x)
 {
 	im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x]+im[y*img.width+x])/5;
-	
+	//im[y*img.width+x]=(im[y*img.width+x-1]+im[y*img.width+x+1]+im[(y-1)*img.width+x]+im[(y+1)*img.width+x])/4;
 	//im[y*img.width+x]=(im[y*img.width+x-1]+im[(y-1)*img.width+x]+im[y*img.width+x])/3;
 }
+
 
 
 //*************************************************************************************
@@ -7730,4 +7849,413 @@ public void filter1pixEPX2x_003(int[] im,int y,int x, int um1, int um2)
 		}
 		
 }
+
+//*************************************************************************************
+public void filter1pixEPX2x_004(int[] im,int y,int x, int um1, int um2)
+{
+	//012
+	//345
+	//678
+	//System.out.println("estoy en 002");
+	
+	int[] matriz=new int[9];
+	boolean modif=false;
+	
+	int umbral=11;
+	//umbral =um;
+	int u1=um1;//11;
+	int u2=um2;//16;
+	
+	int i=y*img.width+x;		
+	matriz[0]=im[i-1-img.width];
+	matriz[1]=im[i-img.width];
+	matriz[2]=im[i+1-img.width];
+	matriz[3]=im[i-1];
+	matriz[4]=im[i];
+	matriz[5]=im[i+1];
+	matriz[6]=im[i-1+img.width];
+	matriz[7]=im[i+img.width];
+	matriz[8]=im[i+1+img.width];
+	
+	
+	
+	
+	//marco arriba izquierdo 
+	if ((Math.abs(matriz[1]-matriz[2])<u1) &&
+	    (Math.abs(matriz[3]-matriz[6])<u1) &&
+	    (Math.abs(matriz[1]-matriz[3])<u2) 
+	   // && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+	    )
+	{
+		int mezcla=(matriz[1]+matriz[3])/2;
+		//mezcla=(matriz[1]+matriz[2]+matriz[3]+matriz[6])/4;
+		
+		
+		mezcla=matriz[1];
+		
+		im[i]=mezcla;
+		modif=true;
+	}
+	//marco arriba derecho
+	//------------------------
+	  if ((Math.abs(matriz[0]-matriz[1])<u1) &&
+		    (Math.abs(matriz[5]-matriz[8])<u1) &&
+		    (Math.abs(matriz[5]-matriz[1])<u2) 
+		//    && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+		    )
+	 {
+		int mezcla=(matriz[1]+matriz[5])/2;
+		mezcla=matriz[1];
+		 //mezcla=(matriz[0]+matriz[1]+matriz[5]+matriz[8])/4;
+		//mezcla=matriz[2];
+		 im[i]=mezcla;
+		 modif=true;
+	 }
+	//marco abajo izq
+	//--------------------  
+	if ((Math.abs(matriz[7]-matriz[8])<u1) &&
+			    (Math.abs(matriz[0]-matriz[3])<u1) &&
+			    (Math.abs(matriz[3]-matriz[7])<u2) 
+		//	    && (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+			    )
+		{
+			int mezcla=(matriz[3]+matriz[7])/2;
+			//mezcla=(matriz[0]+matriz[3]+matriz[7]+matriz[8])/4;
+		//	mezcla=matriz[6];
+			mezcla=matriz[7];
+			im[i]=mezcla;
+			modif=true;
+		}
+		//marco abajo dere
+	//-----------------------
+		if ((Math.abs(matriz[6]-matriz[7])<u1) &&
+		    (Math.abs(matriz[2]-matriz[5])<u1) &&
+			(Math.abs(matriz[7]-matriz[5])<u2) 
+		//	&& (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+					    )
+		{
+		int mezcla=(matriz[7]+matriz[5])/2;
+			//mezcla=(matriz[6]+matriz[7]+matriz[5]+matriz[2])/4;
+		//mezcla=matriz[8];
+		mezcla=matriz[7];
+			im[i]=mezcla;
+			modif=true;
+		}
+		
+		//System.out.print("caca");
+		//modif=true;
+		
+		//  diagonales
+		//--------------------------------------
+		//System.out.println("Hola");
+		//if (2>1)
+		if (!modif)
+		{
+			//H marco arriba izquierdo 
+			if (((Math.abs(matriz[1]-matriz[2])<u1) &&
+			    //(Math.abs(matriz[3]-matriz[6])<umbral) &&
+			    (Math.abs(matriz[1]-matriz[3])<u2) 
+			   // && (Math.abs(matriz[4]-matriz[1])>umbral) //nuevo
+			    )) 
+			    {
+				int mezcla=(matriz[1]+matriz[3]+matriz[4])/3;
+				//mezcla=(matriz[1]);//+matriz[3])/2;
+				mezcla=(matriz[4]+matriz[1])/2;
+				mezcla=matriz[3];
+				im[i]=mezcla;
+				modif=true;
+			    }
+			
+			//V arriba izq2
+			
+			else  if  
+			    ((Math.abs(matriz[3]-matriz[6])<u1) &&
+			     (Math.abs(matriz[1]-matriz[3])<u2)		
+			    		)
+			{
+				int mezcla=(matriz[1]+matriz[3]+matriz[4])/3;
+				mezcla=(matriz[3]+matriz[4])/2;
+				mezcla=matriz[1];
+				im[i]=mezcla;
+				modif=true;
+			}
+			//marco arriba derecho HD
+			else if ((Math.abs(matriz[0]-matriz[1])<u1) &&
+				   // (Math.abs(matriz[5]-matriz[8])<umbral) &&
+				    (Math.abs(matriz[5]-matriz[1])<u2) 
+				
+				    )
+				    {
+				  int mezcla=(matriz[1]+matriz[5]+matriz[4])/3;
+					mezcla=(matriz[1]+matriz[4])/2;
+					mezcla=matriz[5];
+					 im[i]=mezcla;
+					 modif=true;
+				    }
+				    
+			// V arriba derechp
+			  else if
+				  ((Math.abs(matriz[5]-matriz[8])<u1) &&
+						  (Math.abs(matriz[5]-matriz[1])<u2) 
+						  )
+			 {
+				int mezcla=(matriz[1]+matriz[5]+matriz[4])/3;
+				mezcla=(matriz[5]+matriz[4])/2;
+				
+				mezcla=matriz[1];
+				 im[i]=mezcla;
+				 modif=true;
+			 }
+			//marco abajo izq H
+			  else if ((Math.abs(matriz[7]-matriz[8])<u1) &&
+					    //(Math.abs(matriz[0]-matriz[3])<umbral) &&
+					    (Math.abs(matriz[3]-matriz[7])<umbral) 
+				//	    && (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+					    )
+					    {
+				int mezcla=(matriz[3]+matriz[7]+matriz[4])/3;
+				mezcla=(matriz[7]+matriz[4])/2;
+				mezcla=matriz[3];
+				im[i]=mezcla;
+				modif=true;
+				
+					    }
+					
+			// v abajo iz
+			  else if	    
+					    
+				((Math.abs(matriz[0]-matriz[3])<u2) &&
+						(Math.abs(matriz[3]-matriz[7])<umbral)
+						
+						)
+				
+				
+				{
+					int mezcla=(matriz[3]+matriz[7]+matriz[4])/3;
+					mezcla=(matriz[3]+matriz[4])/2;//+matriz[7])/2;
+					mezcla=matriz[7];
+					im[i]=mezcla;
+					modif=true;
+				}
+				//marco abajo dere H
+				if ((Math.abs(matriz[6]-matriz[7])<u1) &&
+				    //(Math.abs(matriz[2]-matriz[5])<umbral) &&
+					(Math.abs(matriz[7]-matriz[5])<u2) 
+				//	&& (Math.abs(matriz[4]-matriz[7])>umbral) //nuevo
+							    )
+					  {
+					int mezcla=(matriz[7]+matriz[5]+matriz[4])/3;
+					mezcla=(matriz[7]+matriz[4])/2;//+matriz[5])/2;
+					mezcla=matriz[5];
+						im[i]=mezcla;
+						modif=true;
+					   }
+					
+				//abajo dere v
+				else if (		    
+					
+							(Math.abs(matriz[2]-matriz[5])<u1) &&
+							(Math.abs(matriz[7]-matriz[5])<u2)
+							)
+				{
+				int mezcla=(matriz[7]+matriz[5]+matriz[4])/3;
+				mezcla=(matriz[5]+matriz[4])/2;//+matriz[5])/2;
+				mezcla=matriz[7];
+					im[i]=mezcla;
+					modif=true;
+				}
+			
+			
+		}
+		
+}
+
+
+//****************************************************************************************
+//est funcion filtra por epx selectivamente segun el pppx y pppy, pix a pix dentro del bloque
+public void filterEDGE( int by, int bx, PRblock[][] prbl, int step)
+{
+//esta funcion filtra por EDGE la imagen
+	
+	
+	
+	int[] im=img.interpolated_YUV[0];
+	System.out.println("filtering EPX...");
+	
+	//gradientes de PR
+	float prax=prbl[by][bx].PRx;
+	float prbx=prbl[by][bx+1].PRx;
+	float pray=prbl[by][bx].PRy;
+	float prby=prbl[by][bx+1].PRy;
+	
+	float prx=prax;
+	float pry=pray;
+	
+	float gry_prax=(prbl[by+1][bx].PRx-prbl[by][bx].PRx)/(yfin-yini);
+	float gry_prbx=(prbl[by+1][bx+1].PRx-prbl[by][bx+1].PRx)/(yfin-yini);
+	float gry_pray=(prbl[by+1][bx].PRy-prbl[by][bx].PRy)/(yfin-yini);
+	float gry_prby=(prbl[by+1][bx+1].PRy-prbl[by][bx+1].PRy)/(yfin-yini);
+	
+	
+	//gradientes de PPP
+	float pppax=ppp[0][0];
+	float pppbx=ppp[0][1];
+	
+	float pppx=pppax;
+	
+	float pppay=ppp[1][0];
+	float pppby=ppp[1][1];
+	float pppy=pppay;
+	
+	
+	float gry_pppax=(ppp[0][2]-ppp[0][0])/(yfin-yini);// constante, es el lado a
+	float gry_pppbx=(ppp[0][1]-ppp[0][3])/(yfin-yini);// constante, es el lado b
+	
+	float gry_pppay=(ppp[1][2]-ppp[1][0])/(yfin-yini);// constante, es el lado a
+	float gry_pppby=(ppp[1][3]-ppp[1][1])/(yfin-yini);// constante, es el lado b
+	
+	
+	float umbral_ppp=1.0f;//1.5f;//3.7f;//1.5f;
+	float umbral_pr=0.0f;//125f;
+	
+	
+	for (int y=yini; y<=yfin;y++)
+	{
+		pppx=pppax;
+		pppy=pppay;
+		
+		prx=prax;
+		pry=pray;
+		
+		float grx_pppx=(pppbx-pppax)/(xfin-xini);//variable segun scanline
+		float grx_pppy=(pppby-pppay)/(xfin-xini);//variable segun scanline
+		
+		float grx_prx=(prbx-prax)/(xfin-xini);//variable segun scanline
+		float grx_pry=(prby-pray)/(xfin-xini);//variable segun scanline
+		
+		
+		
+		//System.out.println ("hola");
+		for (int x=xini; x<=xfin;x++)
+		{
+		  if (x>0 && y>0 && x<img.width-1 && y<img.height-1)
+			{
+			  int lum= (int)(pppx*10);
+			  if (lum>255) lum=255;
+			  if (lum<0) lum =0;
+			 // im[y*img.width+x]=lum;
+			  
+			  if ((pppx>umbral_ppp || pppy>umbral_ppp))
+		  	    {
+			    
+				  filter1pixEDGE(im,y,x,step);
+				  //im[y*img.width+x]=(int)(pppx*10);
+				  
+			    }
+			}   
+			pppx+=grx_pppx;
+			pppy+=grx_pppy;
+			
+			prx+=grx_prx;
+			pry+=grx_pry;
+			
+		}	
+		pppax+=gry_pppax;
+		pppbx+=gry_pppbx;
+		pppay+=gry_pppay;
+		pppby+=gry_pppby;
+		
+		prax+=gry_prax;
+		prbx+=gry_prbx;
+		pray+=gry_pray;
+		prby+=gry_prby;
+		
+		
+	}
+	
+	//--------------step 2
+	
+	
+	
+	
+	System.out.println("filtered !");
+}
+
+//*************************************************
+
+//*************************************************
+public void filter1pixEDGE(int [] im, int y, int x, int step)
+{
+	//im[y*img.width+x]=255;
+	
+	if (x%2==0 && y%2==0) return ; // lo dejamos como esta
+	
+	//diagonal
+	int lum=im[y*img.width+x];
+	//int lumi =lum;
+	float u=1.2f;
+	
+	if ( x%2!=0 && y%2!=0 )
+	  {
+	  if (step==1 ) //el step 1 empeora la imagen. comprobado
+	  { // centro de la cruz X
+		/*
+		 *  a b
+		 *   x
+		 *  c d
+		 */
+      int a=im[(y-1)*img.width+x-1];
+	  int b=im[(y-1)*img.width+x+1];
+	  int c=im[(y+1)*img.width+x-1];
+	  int d=im[(y+1)*img.width+x+1];
+	
+	  int difad=Math.abs(a-d);
+	  int difbc=Math.abs(b-c);
+	  //if (difad>=0 || difbc>=0){
+		  if (difad>=u*difbc) lum=((b+c)/2);
+		  else if (difbc>=u*difad) lum=((a+d)/2);
+		  
+	    //if (difad>=difbc) lum=(b+c)/2;
+	    ///else lum=(a+d)/2;
+	  //}
+	  
+	  }
+	}
+    else if (step==2 && ((x%2!=0 && y%2==0) || (x%2==0 && y%2!=0)))//cruz +
+    {
+    	/*
+    	 *    a
+    	 *   bxd
+    	 *    c
+    	 */
+	    int a=im[(y-1)*img.width+x];
+		int b=im[y*img.width+x-1];
+		int c=im[(y+1)*img.width+x];
+		int d=im[y*img.width+x+1];
+		
+		int difac=Math.abs(a-c);
+		int difbd=Math.abs(b-d);
+		
+		if (difac>=u*difbd) lum=((b+d)/2);
+		else if (difbd>= u*difac)   lum=((a+c)/2);
+		 
+		
+		/*if ((difac>0) || difbd>0)
+		 {
+		 if (difac>=difbd) lum=(b+d)/2;
+		 else   lum=(a+c)/2;
+		 }
+		 */
+		//else lum=(a+b)/2;
+		//lum=0;
+  }
+
+if (lum>255) lum=255;
+if (lum<0) lum=0;
+//if (lum<64 || lum>192) return;
+//if (lum>64 && lum<192) return;
+im[y*img.width+x]=lum;
+
+}
+
 }//end class Block

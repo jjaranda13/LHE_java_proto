@@ -7624,8 +7624,8 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 				b.ppp[1][3]=(k2/ (1f+k*prbl[by+1][bx+1].PRy))*compression_factor;
 */
 
-				
-				if (Block.MAX_PPP>4) Block.MAX_PPP=4;
+				int max=4;
+				if (Block.MAX_PPP>max) Block.MAX_PPP=max;
 				
 				//if (Block.MAX_PPP>8) Block.MAX_PPP=8;
 				//Block.MAX_PPP=1;
@@ -7697,6 +7697,9 @@ if (current_minPRy<0.1f) current_minPRy=0.1f;
 				//limitacion de la elasticidad a 3 veces
 				//------------------------------------------
 				float max_elastic=3;//3;//3f;// con un valor elevado estaria desactivado, pej 300
+				
+				//max_elastic=300;
+				
 				float maxppp=minppp*max_elastic;
 				for (int coord=0;coord<2;coord++)
 					for (int corner=0;corner<4;corner++)
